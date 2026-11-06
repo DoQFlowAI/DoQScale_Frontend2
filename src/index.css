@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+/* Figma(DoQFlow AI - UI / Page Final Ver)에서 뽑은 디자인 토큰 */
+@theme {
+  --font-sans: 'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-page: #f2f6f4;
+  --color-brand: #1b5444;
+  --color-brand-header: #1b5a4a;
+  --color-ink: #101614;
+  --color-ink-2: #1e2a26;
+  --color-muted: #6a7a75;
+  --color-line: #e3ebe8;
+  --color-line-strong: #a9c9bf;
+  --color-chip: #dcefe8;
+  --color-chip-ink: #2b6b59;
+  --color-soft: #eef6f3;
+  --color-soft-line: #9fc4b8;
+  --color-th: #f6f8f7;
+  --color-warn: #fff3dc;
+  --color-warn-ink: #8a5a00;
+  --color-danger-bg: #fdecec;
+  --color-danger: #a33a3a;
+  --color-neutral: #eceff0;
+  --color-diff-add: #e6f4ee;
+  --color-diff-filler: #f3f6f5;
+  --color-scroll-track: #e6edea;
+  --color-scroll-thumb: #9fb3ac;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* 얇은 스크롤바 (Figma 스크롤바 트랙/썸) */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scroll-thumb) var(--color-scroll-track);
+}
