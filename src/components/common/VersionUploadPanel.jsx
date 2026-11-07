@@ -16,6 +16,7 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
     const [dragIndex, setDragIndex] = useState(null);
     const [overIndex, setOverIndex] = useState(null);
     const [errors, setErrors] = useState([]);
+    const [fileOver, setFileOver] = useState(false);
 
     function addFiles(fileList) {
         const pickedFiles = Array.from(fileList);
@@ -60,8 +61,22 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
 
     function handleDrop(e) {
         e.preventDefault();
+        setFileOver(false);
         if (e.dataTransfer.files.length === 0) return;
         addFiles(e.dataTransfer.files);
+    }
+
+    function handleZoneDragOver(e) {
+        e.preventDefault();
+        if (e.dataTransfer.types.includes('Files')) {
+            setFileOver(true);
+        }
+    }
+
+    function handleZoneDragLeave(e) {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            setFileOver(false);
+        }
     }
 
     function reorder(fromIndex, toIndex) {
@@ -101,9 +116,12 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
             />
 
             <div
-                onDragOver={(e) => e.preventDefault()}
+                onDragOver={handleZoneDragOver}
+                onDragLeave={handleZoneDragLeave}
                 onDrop={handleDrop}
-                className="flex flex-col items-center gap-2 rounded-btn border-2 border-dashed border-line-strong px-4 py-6 text-center"
+                className={`flex flex-col items-center gap-2 rounded-btn border-2 border-dashed px-4 py-6 text-center ${
+                    fileOver ? 'border-brand bg-soft' : 'border-line-strong'
+                }`}
             >
                 <p className="text-label text-muted">파일을 여기로 끌어다 놓거나</p>
                 <Button variant="outline" onClick={() =>
