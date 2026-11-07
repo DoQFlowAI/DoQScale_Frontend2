@@ -7,6 +7,7 @@ import { formatFileSize } from '../../utils/format';
 
 const fileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
 const ALLOWED_FILE_TYPES = ['pdf', 'docx'];
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 export default function VersionUploadPanel({ files, onChange, startVersionNo, disabled = false }) {
 
@@ -115,6 +116,10 @@ function getRejectReason(file) {
 
     if (file.size === 0) {
         return '빈 파일은 업로드할 수 없습니다';
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+        return '파일 크기는 20MB를 초과할 수 없습니다';
     }
     
     return null;
