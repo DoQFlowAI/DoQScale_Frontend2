@@ -1,10 +1,12 @@
+// 소유: 공통 베이스
 import { useEffect, useId, useRef } from 'react';
 import PropTypes from 'prop-types';
 
-/** 가운데 모달 공통 틀: 딤 배경, Esc 닫기, 포커스 이동/복귀, 스크롤 잠금 */
-export default function Modal({ open, title, subtitle, onClose, width = 'max-w-[640px]', footer, children, closeDisabled }) {
+/** 가운데 모달 틀: 딤 배경, Esc 닫기, 열 때 포커스 이동·닫을 때 복귀, 뒤 화면 스크롤 잠금 */
+export default function Modal({ open, title, subtitle, onClose, width = 'max-w-[640px]', footer, children, closeDisabled = false }) {
   const titleId = useId();
   const dialogRef = useRef(null);
+  // Esc 처리에서 항상 최신 onClose 를 부르도록 ref 에 둡니다
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -28,35 +30,32 @@ export default function Modal({ open, title, subtitle, onClose, width = 'max-w-[
   }, [open, closeDisabled]);
 
   if (!open) return null;
+  const close = () => !closeDisabled && onClose?.();
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={() => !closeDisabled && onClose?.()}
-        aria-hidden="true"
-      />
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={close} aria-hidden="true" />
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative flex max-h-[calc(100vh-32px)] w-full ${width} flex-col rounded-[24px] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.16)] outline-none`}
+        className={`relative flex max-h-[calc(100vh-32px)] w-full ${width} flex-col rounded-3xl bg-white shadow-modal outline-none`}
       >
-        <div className="flex items-start gap-3 px-7 pt-7 pb-3">
+        <div className="flex items-start gap-3 px-7 pb-3 pt-7">
           <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="text-[22px] font-bold text-ink">
+            <h2 id={titleId} className="text-heading font-bold text-ink">
               {title}
             </h2>
-            {subtitle ? <p className="mt-1 text-[13px] text-muted">{subtitle}</p> : null}
+            {subtitle ? <p className="mt-1 text-label text-muted">{subtitle}</p> : null}
           </div>
           <button
             type="button"
             aria-label="닫기"
-            onClick={() => onClose?.()}
+            onClick={close}
             disabled={closeDisabled}
-            className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center text-[18px] text-muted hover:text-ink disabled:opacity-40"
+            className="-mr-2 -mt-1 flex h-11 w-11 items-center justify-center text-lg text-muted hover:text-ink disabled:opacity-40"
           >
             ✕
           </button>

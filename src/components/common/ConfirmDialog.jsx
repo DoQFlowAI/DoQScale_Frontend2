@@ -1,7 +1,9 @@
+// 소유: 공통 베이스
 import PropTypes from 'prop-types';
 import Modal from './Modal';
 import Button from './Button';
 
+/** 삭제·회수 등 되돌릴 수 없는 작업 확인. pending 동안은 닫기·버튼을 막습니다 */
 export default function ConfirmDialog({ open, message, onConfirm, onCancel, pending = false, confirmLabel = '삭제' }) {
   return (
     <Modal
@@ -21,7 +23,7 @@ export default function ConfirmDialog({ open, message, onConfirm, onCancel, pend
         </>
       }
     >
-      <p className="py-3 text-[15px] text-ink-2">{message}</p>
+      <p className="py-3 text-body text-ink-2">{message}</p>
     </Modal>
   );
 }

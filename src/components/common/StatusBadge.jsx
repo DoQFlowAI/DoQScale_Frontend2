@@ -1,21 +1,21 @@
+// 소유: 공통 베이스
 import PropTypes from 'prop-types';
 import Chip from './Chip';
 
-// 문서 status · 버전 status · 열람자 status 를 한 곳에서 문구/색으로 바꾼다
+// 문서 status · 버전 status · 열람자 status → 문구와 색
 const MAP = {
-  EMPTY: { label: '비어 있음', tone: 'gray' },
-  PROCESSING: { label: '분석 중', tone: 'warn' },
-  READY: { label: '준비 완료', tone: 'green' },
-  FAILED: { label: '실패', tone: 'danger' },
-  PENDING: { label: '대기', tone: 'warn' },
-  ACCEPTED: { label: '수락', tone: 'green' },
-  REJECTED: { label: '거절', tone: 'gray' },
+  EMPTY: ['비어 있음', 'gray'],
+  PROCESSING: ['분석 중', 'warn'],
+  READY: ['준비 완료', 'green'],
+  FAILED: ['실패', 'danger'],
+  PENDING: ['대기', 'warn'],
+  ACCEPTED: ['수락', 'green'],
+  REJECTED: ['거절', 'gray'],
 };
 
 export default function StatusBadge({ status }) {
-  const item = MAP[status];
-  if (!item) return <Chip tone="gray">{status}</Chip>;
-  return <Chip tone={item.tone}>{item.label}</Chip>;
+  const [label, tone] = MAP[status] ?? [status, 'gray'];
+  return <Chip tone={tone}>{label}</Chip>;
 }
 
 StatusBadge.propTypes = {

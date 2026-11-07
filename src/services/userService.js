@@ -1,3 +1,4 @@
+// 소유: 공통 베이스
 import { api } from './api';
 
 export const userService = {

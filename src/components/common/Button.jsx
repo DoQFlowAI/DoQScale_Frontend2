@@ -1,31 +1,26 @@
+// 소유: 공통 베이스
 import PropTypes from 'prop-types';
 
 const VARIANTS = {
-  primary: 'bg-brand text-white border border-brand hover:bg-[#164538] disabled:bg-[#8fa89f] disabled:border-[#8fa89f]',
+  primary: 'border-brand bg-brand text-white hover:bg-brand-hover disabled:border-disabled disabled:bg-disabled',
   outline:
-    'bg-white text-brand border border-brand hover:bg-soft disabled:text-[#8fa89f] disabled:border-[#c5d3ce] disabled:hover:bg-white',
+    'border-brand bg-white text-brand hover:bg-soft disabled:border-disabled-line disabled:text-disabled disabled:hover:bg-white',
   danger:
-    'bg-white text-danger border border-danger hover:bg-danger-bg disabled:text-[#c9a0a0] disabled:border-[#e3c8c8] disabled:hover:bg-white',
-  ghost: 'bg-transparent text-muted border border-transparent hover:bg-th',
+    'border-danger bg-white text-danger hover:bg-danger-bg disabled:border-danger-disabled-line disabled:text-danger-disabled disabled:hover:bg-white',
+  ghost: 'border-transparent bg-transparent text-muted hover:bg-th',
 };
 
+// 모바일 터치 영역 44px 이상 (명세 8.1)
 const SIZES = {
-  md: 'px-5 py-3 text-[15px] rounded-[14px] min-h-11',
-  sm: 'px-3.5 py-1.5 text-[13px] rounded-[10px] min-h-11 md:min-h-0',
+  md: 'min-h-11 rounded-btn px-5 py-3 text-body',
+  sm: 'min-h-11 rounded-btn-sm px-3.5 py-1.5 text-label md:min-h-0',
 };
 
-export default function Button({
-  variant = 'primary',
-  size = 'md',
-  type = 'button',
-  className = '',
-  children,
-  ...rest
-}) {
+export default function Button({ variant = 'primary', size = 'md', type = 'button', className = '', children, ...rest }) {
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center gap-1.5 font-medium whitespace-nowrap transition-colors disabled:opacity-100 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap border font-medium transition-colors ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
       {...rest}
     >
       {children}
@@ -34,9 +29,9 @@ export default function Button({
 }
 
 Button.propTypes = {
-  variant: PropTypes.oneOf(['primary', 'outline', 'danger', 'ghost']),
-  size: PropTypes.oneOf(['md', 'sm']),
-  type: PropTypes.string,
+  variant: PropTypes.oneOf(Object.keys(VARIANTS)),
+  size: PropTypes.oneOf(Object.keys(SIZES)),
+  type: PropTypes.oneOf(['button', 'submit', 'reset']),
   className: PropTypes.string,
   children: PropTypes.node,
 };
