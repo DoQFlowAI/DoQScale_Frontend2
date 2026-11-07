@@ -62,12 +62,19 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
     function handleDrop(e) {
         e.preventDefault();
         setFileOver(false);
+        if (disabled) return;
         if (e.dataTransfer.files.length === 0) return;
         addFiles(e.dataTransfer.files);
     }
 
     function handleZoneDragOver(e) {
         e.preventDefault();
+
+        if (disabled) {
+            e.dataTransfer.dropEffect = 'none';
+            return;
+        }
+
         if (e.dataTransfer.types.includes('Files')) {
             setFileOver(true);
         }
@@ -113,18 +120,18 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                 onChange={handleSelect}
                 accept=".pdf, .docx"
                 className="hidden"
+                disabled={disabled}
             />
 
             <div
                 onDragOver={handleZoneDragOver}
                 onDragLeave={handleZoneDragLeave}
                 onDrop={handleDrop}
-                className={`flex flex-col items-center gap-2 rounded-btn border-2 border-dashed px-4 py-6 text-center ${
-                    fileOver ? 'border-brand bg-soft' : 'border-line-strong'
-                }`}
+                className={`flex flex-col items-center gap-2 rounded-btn border-2 border-dashed px-4 py-6 text-center ${fileOver ? 'border-brand bg-soft' : 'border-line-strong'
+                    } ${disabled ? 'opacity-50' : ''}`}
             >
                 <p className="text-label text-muted">파일을 여기로 끌어다 놓거나</p>
-                <Button variant="outline" onClick={() =>
+                <Button variant="outline" disabled={disabled} onClick={() =>
                     inputRef.current.click()}>
                     파일 선택
                 </Button>
@@ -149,6 +156,7 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                             versionNo={startVersionNo + index}
                             dragging={dragIndex === index}
                             over={overIndex === index && dragIndex !== index}
+                            disabled={disabled}
                             onDragStart={() => startDrag(index)}
                             onDragOver={() => setOverIndex(index)}
                             onDrop={() => {
@@ -183,10 +191,10 @@ function getRejectReason(file) {
     return null;
 }
 
-function FileRow({ file, order, versionNo, dragging, over, onDragStart, onDragOver, onDrop, onDragEnd, onRemove }) {
+function FileRow({ file, order, versionNo, dragging, over, disabled, onDragStart, onDragOver, onDrop, onDragEnd, onRemove }) {
     return (
         <li
-            draggable
+            draggable={!disabled}
             onDragStart={(e) => {
                 e.dataTransfer.setData('text/plain', '');
                 e.dataTransfer.effectAllowed = 'move';
@@ -202,15 +210,17 @@ function FileRow({ file, order, versionNo, dragging, over, onDragStart, onDragOv
                 onDrop();
             }}
             onDragEnd={onDragEnd}
-            className={`flex cursor-grab items-center gap-2 rounded-btn border bg-white px-3 py-2 ${over ? 'border-brand' : 'border-line'
-                } ${dragging ? 'opacity-50' : ''}`}
+            className={`flex items-center gap-2 rounded-btn border bg-white px-3 py-2 
+                ${disabled ? 'cursor-default' : 'cursor-grab'}
+                ${over ? 'border-brand' : 'border-line'} 
+                ${dragging ? 'opacity-50' : ''}`}
         >
             <Icon name="grip" className="h-4 w-4 shrink-0 text-muted" />
             <span className="text-label text-muted">{order}.</span>
             <span className="min-w-0 flex-1 truncate text-body" title={file.name}>{file.name}</span>
             <span className="text-caption text-muted">{formatFileSize(file.size)}</span>
             <span className="text-label font-medium text-brand">v{versionNo}</span>
-            <Button variant="ghost" size="sm" onClick={onRemove} aria-label={`${file.name} 빼기`} className="hover:text-danger">
+            <Button variant="ghost" size="sm" onClick={onRemove} disabled={disabled} aria-label={`${file.name} 빼기`} className="hover:text-danger">
                 <Icon name="trash" />
             </Button>
         </li>
@@ -235,4 +245,5 @@ FileRow.propTypes = {
     onDrop: PropTypes.func.isRequired,
     onDragEnd: PropTypes.func.isRequired,
     onRemove: PropTypes.func.isRequired,
+    disabled: PropTypes.bool.isRequired,
 };
