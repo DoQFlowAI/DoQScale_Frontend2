@@ -6,16 +6,28 @@ import Icon from './Icon';
 import { formatFileSize } from '../../utils/format';
 
 const fileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
+const ALLOWED_FILE_TYPES = ['pdf', 'docx'];
 
 export default function VersionUploadPanel({ files, onChange, startVersionNo, disabled = false }) {
 
     const inputRef = useRef(null);
     const [dragIndex, setDragIndex] = useState(null);
     const [overIndex, setOverIndex] = useState(null);
+    const [errors, setErrors] = useState([]);
 
     function handleSelect(e) {
         const pickedFiles = Array.from(e.target.files);
-        onChange([...files, ...pickedFiles]);
+        const acceptedFiles = [];
+        const reasons = [];
+
+        for (const file of pickedFiles) {
+            const reason = getRejectReason(file);
+            if (reason) reasons.push(reason);
+            else acceptedFiles.push(file);
+        }
+
+        onChange([...files, ...acceptedFiles]);
+        setErrors([...new Set(reasons)]);
         e.target.value = null;
     }
 
@@ -60,6 +72,14 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                 파일 선택
             </Button>
 
+            {errors.length > 0 && (
+                <ul role="alert" className="mt-2 flex flex-col gap-1 rounded-btn bg-danger-bg px-3 py-2 text-label text-danger">
+                    {errors.map((message) => (
+                        <li key={message}>{message}</li>
+                    ))}
+                </ul>
+            )}
+
             {files.length > 0 && (
                 <ol className="mt-3 flex flex-col gap-2">
                     {files.map((file, index) => (
@@ -84,6 +104,14 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
             )}
         </div>
     );
+}
+
+function getRejectReason(file) {
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_FILE_TYPES.includes(extension)) {
+        return 'PDF 또는 DOCX 파일만 업로드 할 수 있습니다';
+    }
+    return null;
 }
 
 function FileRow({ file, order, versionNo, dragging, over, onDragStart, onDragOver, onDrop, onDragEnd, onRemove }) {
