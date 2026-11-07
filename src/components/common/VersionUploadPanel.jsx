@@ -20,27 +20,37 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
     function handleSelect(e) {
         const pickedFiles = Array.from(e.target.files);
         const acceptedFiles = [];
-        const reasons = [];
+        const rejectedByReason = new Map();
         const existingFileKeys = new Set(files.map(fileKey));
+
+        function reject(file, reason) {
+            if (!rejectedByReason.has(reason)) {
+                rejectedByReason.set(reason, []);
+            }
+            rejectedByReason.get(reason).push(file.name);
+        }
 
         for (const file of pickedFiles) {
             const reason = getRejectReason(file);
             if (reason) {
-                reasons.push(reason);
-            }
-            else if (files.length + acceptedFiles.length >= MAX_FILE_COUNT) {
-                reasons.push(`파일은 최대 ${MAX_FILE_COUNT}개까지 업로드할 수 있습니다`);
+                reject(file, reason);
             }
             else if (existingFileKeys.has(fileKey(file))) {
-                reasons.push(`이미 업로드된 파일입니다: ${file.name}`);
+                reject(file, '이미 업로드된 파일입니다');
+            }
+            else if (files.length + acceptedFiles.length >= MAX_FILE_COUNT) {
+                reject(file, `파일은 최대 ${MAX_FILE_COUNT}개까지 업로드할 수 있습니다`);
             }
             else {
                 acceptedFiles.push(file);
+                existingFileKeys.add(fileKey(file));
             }
         }
 
         onChange([...files, ...acceptedFiles]);
-        setErrors([...new Set(reasons)]);
+        setErrors(
+            [...rejectedByReason].map(([reason, names]) => `${reason}: ${names.join(', ')}`)
+        );
         e.target.value = null;
     }
 
