@@ -17,8 +17,8 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
     const [overIndex, setOverIndex] = useState(null);
     const [errors, setErrors] = useState([]);
 
-    function handleSelect(e) {
-        const pickedFiles = Array.from(e.target.files);
+    function addFiles(fileList) {
+        const pickedFiles = Array.from(fileList);
         const acceptedFiles = [];
         const rejectedByReason = new Map();
         const existingFileKeys = new Set(files.map(fileKey));
@@ -36,7 +36,7 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                 reject(file, reason);
             }
             else if (existingFileKeys.has(fileKey(file))) {
-                reject(file, '이미 업로드된 파일입니다');
+                reject(file, '이미 목록에 있는 파일입니다');
             }
             else if (files.length + acceptedFiles.length >= MAX_FILE_COUNT) {
                 reject(file, `파일은 최대 ${MAX_FILE_COUNT}개까지 업로드할 수 있습니다`);
@@ -51,7 +51,17 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
         setErrors(
             [...rejectedByReason].map(([reason, names]) => `${reason}: ${names.join(', ')}`)
         );
+    }
+
+    function handleSelect(e) {
+        addFiles(e.target.files);
         e.target.value = null;
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        if (e.dataTransfer.files.length === 0) return;
+        addFiles(e.dataTransfer.files);
     }
 
     function reorder(fromIndex, toIndex) {
@@ -90,10 +100,18 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                 className="hidden"
             />
 
-            <Button variant="outline" onClick={() =>
-                inputRef.current.click()}>
-                파일 선택
-            </Button>
+            <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className="flex flex-col items-center gap-2 rounded-btn border-2 border-dashed border-line-strong px-4 py-6 text-center"
+            >
+                <p className="text-label text-muted">파일을 여기로 끌어다 놓거나</p>
+                <Button variant="outline" onClick={() =>
+                    inputRef.current.click()}>
+                    파일 선택
+                </Button>
+                <p className="text-caption text-muted">PDF·DOCX, 파일당 20MB, 최대 10개</p>
+            </div>
 
             {errors.length > 0 && (
                 <ul role="alert" className="mt-2 flex flex-col gap-1 rounded-btn bg-danger-bg px-3 py-2 text-label text-danger">
