@@ -21,6 +21,7 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
         const pickedFiles = Array.from(e.target.files);
         const acceptedFiles = [];
         const reasons = [];
+        const existingFileKeys = new Set(files.map(fileKey));
 
         for (const file of pickedFiles) {
             const reason = getRejectReason(file);
@@ -29,6 +30,9 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
             }
             else if (files.length + acceptedFiles.length >= MAX_FILE_COUNT) {
                 reasons.push(`파일은 최대 ${MAX_FILE_COUNT}개까지 업로드할 수 있습니다`);
+            }
+            else if (existingFileKeys.has(fileKey(file))) {
+                reasons.push(`이미 업로드된 파일입니다: ${file.name}`);
             }
             else {
                 acceptedFiles.push(file);
