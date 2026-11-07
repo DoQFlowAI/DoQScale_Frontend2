@@ -109,7 +109,7 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
 function getRejectReason(file) {
     const extension = file.name.split('.').pop().toLowerCase();
     if (!ALLOWED_FILE_TYPES.includes(extension)) {
-        return 'PDF 또는 DOCX 파일만 업로드 할 수 있습니다';
+        return 'PDF 또는 DOCX 파일만 업로드할 수 있습니다';
     }
     return null;
 }
