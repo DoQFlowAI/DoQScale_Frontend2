@@ -8,6 +8,7 @@ import { formatFileSize } from '../../utils/format';
 const fileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
 const ALLOWED_FILE_TYPES = ['pdf', 'docx'];
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_FILE_COUNT = 10;
 
 export default function VersionUploadPanel({ files, onChange, startVersionNo, disabled = false }) {
 
@@ -23,8 +24,15 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
 
         for (const file of pickedFiles) {
             const reason = getRejectReason(file);
-            if (reason) reasons.push(reason);
-            else acceptedFiles.push(file);
+            if (reason) {
+                reasons.push(reason);
+            }
+            else if (files.length + acceptedFiles.length >= MAX_FILE_COUNT) {
+                reasons.push(`파일은 최대 ${MAX_FILE_COUNT}개까지 업로드할 수 있습니다`);
+            }
+            else {
+                acceptedFiles.push(file);
+            }
         }
 
         onChange([...files, ...acceptedFiles]);
@@ -121,7 +129,7 @@ function getRejectReason(file) {
     if (file.size > MAX_FILE_SIZE) {
         return '파일 크기는 20MB를 초과할 수 없습니다';
     }
-    
+
     return null;
 }
 
