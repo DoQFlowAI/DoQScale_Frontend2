@@ -18,6 +18,11 @@ export const useChatStore = create((set) => ({
   addMessage: (message) => set((s) => ({ messages: [...s.messages, message] })),
   appendToken: (id, token) =>
     set((s) => ({ messages: s.messages.map((m) => (m.id === id ? { ...m, content: m.content + token } : m)) })),
+  setSources: (id, sources) =>
+    set((s) => ({
+      messages: s.messages.map((m) =>
+        m.id === id ? { ...m, sources } : m),
+    })),
   finishMessage: (id, patch = {}) =>
     set((s) => ({
       messages: s.messages.map((m) => (m.id === id ? { ...m, ...patch, streaming: false } : m)),
