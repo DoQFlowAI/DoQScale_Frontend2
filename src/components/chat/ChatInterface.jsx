@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useStreamingText } from '../../utils/useStreamingText';
 import { chatService } from '../../services/chatService';
-import { getErrorMessage } from '../../utils/errors';
+import { getErrorMessage, isNotFound } from '../../utils/errors';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 
@@ -11,15 +11,65 @@ let nextLocalId = 1;
 const newLocalId = () => `local-${nextLocalId++}`;
 const RATE_LIMIT_WAIT_MS = 10000;
 
+function toMessage(m) {
+    return {
+        id: `server-${m.messageId}`,
+        role: m.role === 'USER' ? 'user' : 'assistant',
+        content: m.content ?? '',
+        sources: m.sources ?? [],
+        masked: m.masked ?? false,
+    };
+}
+
+function endAnswer(answerId) {
+    const { messages, finishMessage, removeMessage } = useChatStore.getState();
+    const answer = messages.find((m) => m.id === answerId);
+
+    if (answer && answer.content) {
+        finishMessage(answerId);
+    }
+    else {
+        removeMessage(answerId);
+    }
+}
+
 export default function ChatInterface() {
     const sessionId = useChatStore((s) => s.sessionId);
     const messages = useChatStore((s) => s.messages);
     const isLoading = useChatStore((s) => s.isLoading);
-    const { setSession, setLoading, addMessage, appendToken, setSources, finishMessage, removeMessage } = useChatStore.getState();
+    const { setSession, setLoading, addMessage, appendToken, setSources, finishMessage } = useChatStore.getState();
     const { start } = useStreamingText();
     const [error, setError] = useState('');
     const [rateLimited, setRateLimited] = useState(false);
     const listRef = useRef(null);
+
+    useEffect(() => {
+        const state = useChatStore.getState();
+        if (!state.sessionId || state.isLoading) return;
+
+        let ignore = false;
+        chatService.messages(state.sessionId)
+            .then((list) => {
+                if (ignore || useChatStore.getState().isLoading) return;
+                state.setMessages(list.map(toMessage));
+            })
+            .catch((e) => {
+                if (ignore) return;
+                if (isNotFound(e)) {
+                    state.clear();
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            const { messages } = useChatStore.getState();
+            messages.filter((m) => m.streaming).forEach((m) => endAnswer(m.id));
+        };
+    }, []);
 
     useEffect(() => {
         if (!rateLimited) return;
@@ -33,17 +83,6 @@ export default function ChatInterface() {
             list.scrollTop = list.scrollHeight;
         }
     }, [messages]);
-
-    function endAnswer(answerId) {
-        const answer = useChatStore.getState().messages.find((m) => m.id === answerId);
-
-        if (answer && answer.content) {
-            finishMessage(answerId);
-        }
-        else {
-            removeMessage(answerId);
-        }
-    }
 
     function showError(answerId, e) {
         endAnswer(answerId);
