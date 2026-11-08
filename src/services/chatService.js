@@ -2,17 +2,12 @@
 import { api, API_URL } from './api';
 import { useAuthStore } from '../store/authStore';
 import { toApiError } from '../utils/errors';
+import { refreshAccessToken } from './tokenRefresh';
 
 export const chatService = {
   createSession: () => api.post('/chat/sessions').then((r) => r.data),
   messages: (sessionId) => api.get(`/chat/sessions/${sessionId}/messages`).then((r) => r.data),
 
-  /**
-   * TODO(WJH): POST /ai/chat { sessionId, question } 스트리밍 (명세 7.2)
-   *   - EventSource 대신 fetch + ReadableStream (POST·Authorization 헤더 필요). 주소는 api.js 의 API_URL
-   *   - data: {"token"} / data: {"sources"} / data: [DONE], 잘린 줄은 버퍼에 모아 처리
-   *   - signal(AbortController)로 중단, 401 이면 tokenRefresh.js(KJH)의 refreshAccessToken() 후 한 번 재시도
-   */
   stream: async ({ sessionId, question, signal, onToken, onSources }) => {
     const send = (token) =>
       fetch(`${API_URL}/ai/chat`, {
@@ -26,7 +21,12 @@ export const chatService = {
         signal,
       });
 
-    const res = await send(useAuthStore.getState().accessToken);
+    let res = await send(useAuthStore.getState().accessToken);
+
+    if (res.status === 401) {
+      const token = await refreshAccessToken();
+      res = await send(token);
+    }
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
