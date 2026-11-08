@@ -1,0 +1,100 @@
+// 소유: WJH
+import { useState } from 'react';
+import { useChatStore } from '../../store/chatStore';
+import { useStreamingText } from '../../utils/useStreamingText';
+import { chatService } from '../../services/chatService';
+import { getErrorMessage } from '../../utils/errors';
+import ChatMessage from './ChatMessage';
+import ChatInput from './ChatInput';
+
+let nextLocalId = 1;
+const newLocalId = () => `local-${nextLocalId++}`;
+
+export default function ChatInterface() {
+    const sessionId = useChatStore((s) => s.sessionId);
+    const messages = useChatStore((s) => s.messages);
+    const isLoading = useChatStore((s) => s.isLoading);
+    const { setSession, setLoading, addMessage, appendToken, setSources, finishMessage, removeMessage } = useChatStore.getState();
+    const { start } = useStreamingText();
+    const [error, setError] = useState('');
+
+    function endAnswer(answerId) {
+        const answer = useChatStore.getState().messages.find((m) => m.id === answerId);
+
+        if (answer && answer.content) {
+            finishMessage(answerId);
+        }
+        else {
+            removeMessage(answerId);
+        }
+    }
+
+    function showError(answerId, e) {
+        endAnswer(answerId);
+        setError(getErrorMessage(e, { chat: true }));
+    }
+
+    async function handleSend(question) {
+        setError('');
+        addMessage({ id: newLocalId(), role: 'user', content: question });
+
+        const answerId = newLocalId();
+        addMessage({ id: answerId, role: 'assistant', content: '', streaming: true });
+        setLoading(true);
+
+        let id = sessionId;
+        if (!id) {
+            try {
+                const session = await chatService.createSession();
+                id = session.sessionId;
+                setSession(id);
+            }
+            catch (e) {
+                showError(answerId, e);
+                return;
+            }
+        }
+
+        start({
+            sessionId: id,
+            question,
+            onToken: (token) => {
+                appendToken(answerId, token);
+            },
+            onSources: (sources) => {
+                setSources(answerId, sources);
+            },
+            onDone: () => {
+                finishMessage(answerId);
+            },
+            onError: (e) => {
+                showError(answerId, e);
+            },
+        });
+    }
+
+    return (
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div role="log" aria-live="polite" className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+                {messages.length === 0 ? (
+                    <p className="m-auto text-body text-muted">문서에 대해 질문해 보세요</p>
+                ) : (
+                    messages.map((m) => (
+                        <ChatMessage
+                            key={m.id}
+                            role={m.role}
+                            content={m.content}
+                            sources={m.sources}
+                            masked={m.masked}
+                            streaming={m.streaming}
+                        />
+                    ))
+                )}
+            </div>
+
+            {error && <p role="alert" className="text-label text-danger">{error}</p>}
+
+            <ChatInput onSend={handleSend} disabled={isLoading} />
+        </div>
+    );
+}
