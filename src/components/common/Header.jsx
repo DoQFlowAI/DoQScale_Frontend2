@@ -1,20 +1,22 @@
 // 소유: WJH (공통 레이아웃 틀)
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate, Link } from 'react-router-dom';
 import RankBadge from './RankBadge';
+import Icon from './Icon';
 import { useAuthStore } from '../../store/authStore';
 import { authService } from '../../services/authService';
 import { expireSession } from '../../services/session';
 
-/**
- * TODO(WJH): 모바일 메뉴 버튼(사이드바 서랍 열기), 로그아웃 중 버튼 잠금
- * TODO(WJH): KJH 의 InvitationMenu 가 오면 이름 앞에 배치 — <InvitationMenu onAccepted={onInvitationAccepted} />
- *             (Layout 에서 <Header onInvitationAccepted={refreshDocuments} /> 로 넘김. 수락하면 사이드바 목록 갱신)
- */
-export default function Header() {
+export default function Header({ menuOpen = false, onMenuClick }) {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const logout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+
     try {
       await authService.logout(useAuthStore.getState().refreshToken);
     } catch {
@@ -26,6 +28,15 @@ export default function Header() {
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-3 bg-brand-header px-4 md:px-8">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        aria-label="메뉴 열기"
+        aria-expanded={menuOpen}
+        className="-ml-2 flex h-11 w-11 items-center justify-center rounded-btn-sm text-white hover:bg-white/10 md:hidden"
+      >
+        <Icon name="menu" />
+      </button>
       <Link to="/" className="text-lg font-bold text-white md:text-heading">
         DoQFlow AI
       </Link>
@@ -39,10 +50,16 @@ export default function Header() {
       <button
         type="button"
         onClick={logout}
-        className="flex min-h-11 items-center rounded-btn-sm border border-line-strong px-3.5 text-label font-medium text-white hover:bg-white/10 md:min-h-9"
+        disabled={loggingOut}
+        className="flex min-h-11 items-center rounded-btn-sm border border-line-strong px-3.5 text-label font-medium text-white hover:bg-white/10 disabled:opacity-60 md:min-h-9"
       >
-        로그아웃
+        {loggingOut ? '로그아웃 중…' : '로그아웃'}
       </button>
     </header>
   );
 }
+
+Header.propTypes = {
+  menuOpen: PropTypes.bool,
+  onMenuClick: PropTypes.func,
+};
