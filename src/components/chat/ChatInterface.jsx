@@ -1,4 +1,5 @@
 // 소유: WJH
+import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useStreamingText } from '../../utils/useStreamingText';
@@ -33,7 +34,7 @@ function endAnswer(answerId) {
     }
 }
 
-export default function ChatInterface() {
+export default function ChatInterface({ active = true }) {
     const sessionId = useChatStore((s) => s.sessionId);
     const messages = useChatStore((s) => s.messages);
     const isLoading = useChatStore((s) => s.isLoading);
@@ -45,7 +46,7 @@ export default function ChatInterface() {
 
     useEffect(() => {
         const state = useChatStore.getState();
-        if (!state.sessionId || state.isLoading) return;
+        if (!active || !state.sessionId || state.isLoading) return;
 
         let ignore = false;
         chatService.messages(state.sessionId)
@@ -62,7 +63,7 @@ export default function ChatInterface() {
         return () => {
             ignore = true;
         };
-    }, []);
+    }, [active]);
 
     useEffect(() => {
         return () => {
@@ -157,3 +158,7 @@ export default function ChatInterface() {
         </div>
     );
 }
+
+ChatInterface.propTypes = {
+    active: PropTypes.bool,
+};
