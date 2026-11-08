@@ -1,5 +1,5 @@
 // 소유: WJH
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { chatService } from '../services/chatService';
 
 export function useStreamingText() {
@@ -40,6 +40,10 @@ export function useStreamingText() {
         controllerRef.current = null;
         setIsStreaming(false);
     }, []);
+
+    useEffect(() => {
+        return stop;
+    }, [stop]);
 
     return { isStreaming, error, start, stop };
 }
