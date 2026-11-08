@@ -1,5 +1,7 @@
 // 소유: WJH (채팅)
-import { api } from './api';
+import { api, API_URL } from './api';
+import { useAuthStore } from '../store/authStore';
+import { toApiError } from '../utils/errors';
 
 export const chatService = {
   createSession: () => api.post('/chat/sessions').then((r) => r.data),
@@ -11,5 +13,25 @@ export const chatService = {
    *   - data: {"token"} / data: {"sources"} / data: [DONE], 잘린 줄은 버퍼에 모아 처리
    *   - signal(AbortController)로 중단, 401 이면 tokenRefresh.js(KJH)의 refreshAccessToken() 후 한 번 재시도
    */
-  // stream: async ({ sessionId, question, signal, onToken, onSources }) => {},
+  stream: async ({ sessionId, question, signal }) => {
+    const send = (token) =>
+      fetch(`${API_URL}/ai/chat`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
+        },
+        body: JSON.stringify({ sessionId, question }),
+        signal,
+      });
+
+    const res = await send(useAuthStore.getState().accessToken);
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw toApiError(res.status, body);
+    }
+  }
+
 };
