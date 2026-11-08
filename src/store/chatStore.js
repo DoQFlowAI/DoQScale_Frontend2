@@ -10,10 +10,11 @@ import { create } from 'zustand';
 export const useChatStore = create((set) => ({
   sessionId: null,
   messages: [],
-  isLoading: false, // 답변을 받는 중
+  isLoading: false,
 
   setSession: (sessionId) => set({ sessionId }),
-  setMessages: (messages) => set({ messages }), // 서버 기록으로 교체
+  setLoading: (isLoading) => set({ isLoading }),
+  setMessages: (messages) => set({ messages }),
   addMessage: (message) => set((s) => ({ messages: [...s.messages, message] })),
   appendToken: (id, token) =>
     set((s) => ({ messages: s.messages.map((m) => (m.id === id ? { ...m, content: m.content + token } : m)) })),
