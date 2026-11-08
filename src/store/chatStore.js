@@ -23,6 +23,11 @@ export const useChatStore = create((set) => ({
       messages: s.messages.map((m) =>
         m.id === id ? { ...m, sources } : m),
     })),
+  removeMessage: (id) =>
+    set((s) => ({
+      messages: s.messages.filter((m) => m.id !== id),
+      isLoading: false,
+    })),
   finishMessage: (id, patch = {}) =>
     set((s) => ({
       messages: s.messages.map((m) => (m.id === id ? { ...m, ...patch, streaming: false } : m)),
