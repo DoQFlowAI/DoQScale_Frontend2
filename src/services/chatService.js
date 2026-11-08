@@ -13,7 +13,7 @@ export const chatService = {
    *   - data: {"token"} / data: {"sources"} / data: [DONE], 잘린 줄은 버퍼에 모아 처리
    *   - signal(AbortController)로 중단, 401 이면 tokenRefresh.js(KJH)의 refreshAccessToken() 후 한 번 재시도
    */
-  stream: async ({ sessionId, question, signal }) => {
+  stream: async ({ sessionId, question, signal, onToken, onSources }) => {
     const send = (token) =>
       fetch(`${API_URL}/ai/chat`, {
         method: 'POST',
@@ -49,6 +49,10 @@ export const chatService = {
         if (!line.startsWith('data:')) continue;
         const data = line.slice(5).trim();
         if (data === '[DONE]') return;
+
+        const event = JSON.parse(data);
+        if (event.token) onToken?.(event.token);
+        if (event.sources) onSources?.(event.sources);
       }
     }
   }
