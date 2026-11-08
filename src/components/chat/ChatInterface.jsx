@@ -1,5 +1,5 @@
 // 소유: WJH
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useStreamingText } from '../../utils/useStreamingText';
 import { chatService } from '../../services/chatService';
@@ -9,6 +9,7 @@ import ChatInput from './ChatInput';
 
 let nextLocalId = 1;
 const newLocalId = () => `local-${nextLocalId++}`;
+const RATE_LIMIT_WAIT_MS = 10000;
 
 export default function ChatInterface() {
     const sessionId = useChatStore((s) => s.sessionId);
@@ -17,6 +18,21 @@ export default function ChatInterface() {
     const { setSession, setLoading, addMessage, appendToken, setSources, finishMessage, removeMessage } = useChatStore.getState();
     const { start } = useStreamingText();
     const [error, setError] = useState('');
+    const [rateLimited, setRateLimited] = useState(false);
+    const listRef = useRef(null);
+
+    useEffect(() => {
+        if (!rateLimited) return;
+        const timer = setTimeout(() => setRateLimited(false), RATE_LIMIT_WAIT_MS);
+        return () => clearTimeout(timer);
+    }, [rateLimited]);
+
+    useEffect(() => {
+        const list = listRef.current;
+        if (list) {
+            list.scrollTop = list.scrollHeight;
+        }
+    }, [messages]);
 
     function endAnswer(answerId) {
         const answer = useChatStore.getState().messages.find((m) => m.id === answerId);
@@ -32,6 +48,10 @@ export default function ChatInterface() {
     function showError(answerId, e) {
         endAnswer(answerId);
         setError(getErrorMessage(e, { chat: true }));
+
+        if (e?.status === 429) {
+            setRateLimited(true);
+        }
     }
 
     async function handleSend(question) {
@@ -75,7 +95,7 @@ export default function ChatInterface() {
 
     return (
         <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div role="log" aria-live="polite" className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+            <div ref={listRef} role="log" aria-live="polite" className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
                 {messages.length === 0 ? (
                     <p className="m-auto text-body text-muted">문서에 대해 질문해 보세요</p>
                 ) : (
@@ -94,7 +114,7 @@ export default function ChatInterface() {
 
             {error && <p role="alert" className="text-label text-danger">{error}</p>}
 
-            <ChatInput onSend={handleSend} disabled={isLoading} />
+            <ChatInput onSend={handleSend} disabled={isLoading || rateLimited} />
         </div>
     );
 }
