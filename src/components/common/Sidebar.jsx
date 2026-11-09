@@ -1,6 +1,7 @@
 // 소유: WJH (공통 레이아웃 틀)
 import PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
+import DocumentTabList from '../document/DocumentTabList';
 
 const linkClass = ({ isActive }) =>
   `flex min-h-11 items-center truncate rounded-btn-sm px-3 text-body ${isActive ? 'bg-soft font-bold text-brand' : 'text-ink-2 hover:bg-th'
@@ -17,12 +18,16 @@ export default function Sidebar({ list, open = false, onClose }) {
         <NavLink to="/" end className={linkClass}>
           대시보드
         </NavLink>
-        <nav className="thin-scroll flex min-h-0 flex-col gap-1 overflow-y-auto border-t border-line pt-3">
-          {list.documents.map((d) => (
-            <NavLink key={d.documentId} to={`/documents/${d.documentId}`} className={linkClass}>
-              {d.name}
-            </NavLink>
-          ))}
+        <nav className="thin-scroll flex min-h-0 flex-col overflow-y-auto border-t border-line pt-3">
+          <DocumentTabList
+            documents={list.documents}
+            hasMore={list.hasMore}
+            loading={list.loading}
+            error={list.error}
+            onLoadMore={list.loadMore}
+            onRetry={list.refresh}
+            onNavigate={onClose}
+          />
         </nav>
       </aside>
     </>
