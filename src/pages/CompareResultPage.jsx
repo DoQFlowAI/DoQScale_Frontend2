@@ -85,6 +85,11 @@ function CompareResult({ documentId }) {
     load();
   }, [load]);
 
+  // 뒤로 가기 등으로 주소가 다른 유효한 비교로 바뀌면 열려 있던 선택 모달을 닫습니다
+  useEffect(() => {
+    if (validQuery) setModalOpen(false);
+  }, [validQuery, from, to]);
+
   // 쿼리가 없거나 잘못됐거나 비교 요청이 400이면 모달을 엽니다
   const needsSelect = !loading && !failure && (!validQuery || Boolean(compareError));
   useEffect(() => {
