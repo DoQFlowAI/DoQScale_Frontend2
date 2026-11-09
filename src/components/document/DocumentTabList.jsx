@@ -3,15 +3,11 @@ import PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
 import Button from '../common/Button';
 import Chip from '../common/Chip';
+import Icon from '../common/Icon';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingSpinner from '../common/LoadingSpinner';
 import StatusBadge from '../common/StatusBadge';
 
-/**
- * 사이드바 문서 목록 탭.
- * 약속 props: documents(필수), hasMore, loading, error, onLoadMore, onRetry
- * 빈 목록이면 별도 문구를 표시하지 않습니다 (명세 4.3).
- */
 export default function DocumentTabList({
   documents,
   hasMore = false,
@@ -20,6 +16,7 @@ export default function DocumentTabList({
   onLoadMore,
   onRetry,
   onNavigate,
+  onDelete,
 }) {
   if (loading && documents.length === 0) {
     return <LoadingSpinner />;
@@ -34,13 +31,12 @@ export default function DocumentTabList({
       {documents.length > 0 ? (
         <ul className="flex flex-col gap-1.5">
           {documents.map((doc) => (
-            <li key={doc.documentId}>
+            <li key={doc.documentId} className="flex items-start gap-1">
               <NavLink
                 to={`/documents/${doc.documentId}`}
                 onClick={onNavigate}
                 className={({ isActive }) =>
-                  `flex min-h-11 flex-col gap-1 rounded-xl border px-3.5 py-2.5 ${
-                    isActive ? 'border-soft-line bg-soft' : 'border-transparent hover:bg-th'
+                  `flex min-h-11 min-w-0 flex-1 flex-col gap-1 rounded-xl border px-3.5 py-2.5 ${isActive ? 'border-soft-line bg-soft' : 'border-transparent hover:bg-th'
                   }`
                 }
               >
@@ -59,6 +55,17 @@ export default function DocumentTabList({
                   </>
                 )}
               </NavLink>
+              {onDelete && doc.owned ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(doc)}
+                  aria-label={`${doc.name} 삭제`}
+                  className="shrink-0 hover:text-danger"
+                >
+                  <Icon name="trash" className="h-4 w-4" />
+                </Button>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -98,4 +105,5 @@ DocumentTabList.propTypes = {
   onLoadMore: PropTypes.func,
   onRetry: PropTypes.func,
   onNavigate: PropTypes.func,
+  onDelete: PropTypes.func,
 };

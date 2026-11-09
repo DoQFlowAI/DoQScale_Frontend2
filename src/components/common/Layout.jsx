@@ -25,7 +25,7 @@ export default function Layout() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Header menuOpen={sidebarOpen} onMenuClick={() => setSidebarOpen(true)} />
+      <Header menuOpen={sidebarOpen} onMenuClick={() => setSidebarOpen(true)} onInvitationAccepted={refreshDocuments} />
       <div className="flex min-h-0 flex-1">
         <Sidebar list={list} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="thin-scroll min-w-0 flex-1 overflow-y-auto">

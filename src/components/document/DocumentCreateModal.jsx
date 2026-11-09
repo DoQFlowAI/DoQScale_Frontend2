@@ -5,6 +5,7 @@ import Button from '../common/Button';
 import InviteeEmailInput from '../common/InviteeEmailInput';
 import Modal from '../common/Modal';
 import TextField from '../common/TextField';
+import VersionUploadPanel from '../common/VersionUploadPanel';
 import { documentService } from '../../services/documentService';
 import { versionService } from '../../services/versionService';
 import { getErrorMessage } from '../../utils/errors';
@@ -15,7 +16,7 @@ const DESC_MAX = 500;
 function CreateModalBody({ onClose, onCreated }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [files] = useState([]);
+  const [files, setFiles] = useState([]);
   const [invitees, setInvitees] = useState([]);
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState({});
@@ -113,7 +114,7 @@ function CreateModalBody({ onClose, onCreated }) {
         />
         <div className="flex flex-col gap-1.5">
           <span className="text-label font-medium text-ink-2">첫 버전 파일 (선택)</span>
-          {/* WJH: VersionUploadPanel (files={files} onChange={setFiles} startVersionNo={1} disabled={pending}) */}
+          <VersionUploadPanel files={files} onChange={setFiles} startVersionNo={1} disabled={pending} />
         </div>
         <InviteeEmailInput invitees={invitees} onChange={setInvitees} disabled={pending} />
         {formError ? (
