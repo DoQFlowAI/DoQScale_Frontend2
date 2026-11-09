@@ -174,7 +174,9 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
 }
 
 function getRejectReason(file) {
-    const extension = file.name.split('.').pop().toLowerCase();
+    // 점이 없는 이름("pdf")은 확장자가 없는 것으로 봅니다
+    const dot = file.name.lastIndexOf('.');
+    const extension = dot >= 0 ? file.name.slice(dot + 1).toLowerCase() : '';
 
     if (!ALLOWED_FILE_TYPES.includes(extension)) {
         return 'PDF 또는 DOCX 파일만 업로드할 수 있습니다';
