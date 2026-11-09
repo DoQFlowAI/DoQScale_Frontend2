@@ -12,8 +12,7 @@ dist
 src/preview/LocalPreview.jsx
 
 mock
-db
-docker-compose*.yml
+deploy
 
 .claude
 .vscode
