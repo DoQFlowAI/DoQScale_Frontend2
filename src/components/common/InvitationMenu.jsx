@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import Button from './Button';
+import Icon from './Icon';
 import ErrorMessage from './ErrorMessage';
 import LoadingSpinner from './LoadingSpinner';
 import { invitationService } from '../../services/invitationService';
@@ -103,13 +104,14 @@ export default function InvitationMenu({ onAccepted }) {
         onClick={toggle}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex min-h-11 items-center gap-1.5 rounded-btn-sm border border-line-strong px-3.5 py-2 text-label font-medium text-white hover:bg-white/10 md:min-h-9"
+        className="relative flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-btn-sm border border-line-strong py-2 text-label font-medium text-white hover:bg-white/10 sm:px-3.5 md:min-h-9"
       >
-        <span>초대 알림</span>
+        <Icon name="bell" className="h-5 w-5 sm:hidden" />
+        <span className="sr-only sm:not-sr-only">초대 알림</span>
         {count > 0 ? (
           <span
             aria-label={`대기 중인 초대 ${count}개`}
-            className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-caption font-bold text-brand"
+            className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-caption font-bold text-brand sm:static"
           >
             {count}
           </span>
@@ -120,7 +122,7 @@ export default function InvitationMenu({ onAccepted }) {
         <div
           role="region"
           aria-label="받은 초대"
-          className="absolute right-0 top-[calc(100%+8px)] z-40 w-[min(400px,calc(100vw-32px))] rounded-3xl bg-white p-4 shadow-modal"
+          className="fixed inset-x-4 top-16 z-40 rounded-3xl bg-white p-4 shadow-modal sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-[400px]"
         >
           <h2 className="mb-2 text-base font-bold text-ink">받은 초대</h2>
           {loading && items === null ? (
