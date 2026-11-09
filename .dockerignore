@@ -1,6 +1,0 @@
-node_modules
-dist
-_spec
-mock
-.claude
-.env

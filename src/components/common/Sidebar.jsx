@@ -1,103 +1,48 @@
-import { useState } from 'react';
+// 소유: WJH (공통 레이아웃 틀)
 import PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
-import DocumentTabList from '../document/DocumentTabList';
-import DocumentCreateModal from '../document/DocumentCreateModal';
-import LoadingSpinner from './LoadingSpinner';
-import ErrorMessage from './ErrorMessage';
-import Button from './Button';
-import { useAuthStore } from '../../store/authStore';
-import { LEADER_RANK } from '../../utils/format';
 
-export default function Sidebar({
-  documents,
-  loading = false,
-  error = '',
-  hasMore = false,
-  loadingMore = false,
-  onLoadMore,
-  onRetry,
-  onDocumentChanged,
-  open = false,
-  onClose,
-}) {
-  const rankLevel = useAuthStore((s) => s.user?.rankLevel);
-  const [createOpen, setCreateOpen] = useState(false);
+const linkClass = ({ isActive }) =>
+  `flex min-h-11 items-center truncate rounded-btn-sm px-3 text-body ${
+    isActive ? 'bg-soft font-bold text-brand' : 'text-ink-2 hover:bg-th'
+  }`;
 
+/**
+ * 최소 사이드바: 대시보드 링크와 문서 이름 목록 (화면 이동용).
+ * TODO(WJH): 모바일(768px 미만) 서랍. 지금은 모바일에서 숨김 (명세 8.1)
+ * TODO(WJH): KJH 의 컴포넌트가 오면 아래 단순 목록을 교체
+ *   - <DocumentTabList documents={list.documents} hasMore={list.hasMore} loading={list.loading}
+ *       error={list.error} onLoadMore={list.loadMore} onRetry={list.refresh} />
+ *   - 팀장(rankLevel === LEADER_RANK)에게만 [문서 만들기] → <DocumentCreateModal open onClose onCreated />
+ *     onCreated(documentId, flash): 모달 닫기 → list.refresh() → navigate(`/documents/${documentId}`, { state: { flash } })
+ */
+export default function Sidebar({ list }) {
   return (
-    <>
-      {/* 모바일: 메뉴 버튼으로 여는 서랍. 데스크톱: 왼쪽 고정 */}
-      {open ? (
-        <div className="fixed inset-0 top-16 z-30 bg-black/40 md:hidden" onClick={onClose} aria-hidden="true" />
-      ) : null}
-      <aside
-        aria-label="문서 목록"
-        className={`fixed bottom-0 left-0 top-16 z-30 flex w-[280px] max-w-[85vw] flex-col gap-3.5 bg-white px-4 py-5 transition-transform md:static md:z-auto md:max-w-none md:translate-x-0 md:transition-none ${
-          open ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <NavLink
-          to="/"
-          end
-          onClick={onClose}
-          className={({ isActive }) =>
-            `flex min-h-11 items-center rounded-xl px-3.5 py-2.5 text-[15px] ${
-              isActive ? 'bg-soft font-bold text-brand' : 'font-medium text-ink-2 hover:bg-th'
-            }`
-          }
-        >
-          대시보드
-        </NavLink>
-        <div className="h-px shrink-0 bg-line" />
-        <p className="shrink-0 text-[12px] font-medium text-muted">문서</p>
-
-        <div className="thin-scroll -mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
-          {loading && documents.length === 0 ? (
-            <LoadingSpinner />
-          ) : error && documents.length === 0 ? (
-            <ErrorMessage message={error} onRetry={onRetry} />
-          ) : (
-            <>
-              <DocumentTabList documents={documents} onNavigate={onClose} />
-              {error ? <p role="alert" className="mt-2 text-[12px] text-danger">{error}</p> : null}
-              {hasMore ? (
-                <Button variant="outline" size="sm" className="mt-2 w-full" onClick={onLoadMore} disabled={loadingMore}>
-                  {loadingMore ? '불러오는 중…' : '더 보기'}
-                </Button>
-              ) : null}
-            </>
-          )}
-        </div>
-
-        {rankLevel === LEADER_RANK ? (
-          <Button className="w-full shrink-0" onClick={() => setCreateOpen(true)}>
-            + 문서 만들기
-          </Button>
-        ) : null}
-      </aside>
-
-      <DocumentCreateModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onCreated={() => {
-          setCreateOpen(false);
-          onClose?.();
-          onDocumentChanged?.();
-        }}
-      />
-    </>
+    <aside aria-label="문서 목록" className="hidden w-70 shrink-0 flex-col gap-3 bg-white px-4 py-5 md:flex">
+      <NavLink to="/" end className={linkClass}>
+        대시보드
+      </NavLink>
+      <nav className="thin-scroll flex min-h-0 flex-col gap-1 overflow-y-auto border-t border-line pt-3">
+        {list.documents.map((d) => (
+          <NavLink key={d.documentId} to={`/documents/${d.documentId}`} className={linkClass}>
+            {d.name}
+          </NavLink>
+        ))}
+      </nav>
+    </aside>
   );
 }
 
 Sidebar.propTypes = {
-  documents: PropTypes.array.isRequired,
-  loading: PropTypes.bool,
-  error: PropTypes.string,
-  hasMore: PropTypes.bool,
-  loadingMore: PropTypes.bool,
-  onLoadMore: PropTypes.func,
-  onRetry: PropTypes.func,
-  onDocumentChanged: PropTypes.func,
-  open: PropTypes.bool,
-  onClose: PropTypes.func,
+  // useDocumentList() 결과 그대로
+  list: PropTypes.shape({
+    documents: PropTypes.arrayOf(
+      PropTypes.shape({ documentId: PropTypes.number.isRequired, name: PropTypes.string.isRequired }),
+    ).isRequired,
+    hasMore: PropTypes.bool,
+    loading: PropTypes.bool,
+    error: PropTypes.string,
+    loadMore: PropTypes.func,
+    refresh: PropTypes.func.isRequired,
+  }).isRequired,
 };

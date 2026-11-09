@@ -1,6 +1,18 @@
 node_modules
 dist
-.env
-.env.local
-_spec
 *.log
+
+# 환경변수: .env, .env.local, .env.production 등 모두 제외하고 예시 파일만 공유
+.env
+.env.*
+!.env.example
+
+# 개인 미리보기 (각자 PC에서만 씀)
+src/preview/LocalPreview.jsx
+
+# 개인 설정
+.claude/settings.local.json
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

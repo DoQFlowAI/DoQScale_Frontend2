@@ -1,4 +1,5 @@
-// 에러 → 화면 문구 (7.1, 9.6). 500·502·네트워크 오류는 고정 문구로 바꾼다.
+// 소유: 공통 베이스
+// 오류 → 화면 문구 (명세 7.1, 9.6). 500·502·네트워크 오류는 고정 문구로 바꿉니다.
 export const MESSAGES = {
   SERVER: '일시적인 오류가 발생했습니다',
   AI_UNAVAILABLE: '일시적으로 답변할 수 없습니다',
@@ -12,38 +13,33 @@ export class ApiError extends Error {
   constructor({ status = 0, code = '', message = '', traceId = '' } = {}) {
     super(message);
     this.name = 'ApiError';
-    this.status = status;
+    this.status = status; // 0 = 네트워크 오류
     this.code = code;
     this.traceId = traceId;
   }
 }
 
-/** 서버 오류 본문 { success:false, error:{ code, message, traceId } } 을 ApiError 로 */
+/** 서버 오류 본문 { success: false, error: { code, message, traceId } } → ApiError */
 export function toApiError(status, body) {
-  const err = body && typeof body === 'object' ? body.error || body : {};
+  const err = body?.error ?? {};
   return new ApiError({
     status,
-    code: err.code || '',
+    code: err.code ?? '',
     message: typeof err.message === 'string' ? err.message : '',
-    traceId: err.traceId || '',
+    traceId: err.traceId ?? '',
   });
 }
 
-/**
- * 사용자에게 보여 줄 문구.
- * @param {unknown} error
- * @param {{ chat?: boolean }} [opts]
- */
-export function getErrorMessage(error, opts = {}) {
-  if (!(error instanceof ApiError)) return MESSAGES.SERVER; // 네트워크·알 수 없는 오류
-  const { status, message, code } = error;
-  if (status === 0) return MESSAGES.SERVER; // 네트워크 오류
+/** 사용자에게 보여 줄 문구. 채팅 화면은 { chat: true } (429 문구) */
+export function getErrorMessage(error, { chat = false } = {}) {
+  if (!(error instanceof ApiError) || error.status === 0) return MESSAGES.SERVER;
+  const { status, code, message } = error;
   if (status === 502) return MESSAGES.AI_UNAVAILABLE;
   if (status >= 500) return MESSAGES.SERVER;
   if (status === 403) return MESSAGES.FORBIDDEN;
   if (status === 404 && code === 'DOCUMENT_NOT_FOUND') return MESSAGES.NOT_FOUND;
   if (status === 413) return MESSAGES.FILE_TOO_LARGE;
-  if (status === 429 && opts.chat) return MESSAGES.RATE_LIMIT;
+  if (status === 429 && chat) return MESSAGES.RATE_LIMIT;
   return message || MESSAGES.SERVER;
 }
 

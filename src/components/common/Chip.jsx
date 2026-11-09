@@ -1,3 +1,4 @@
+// 소유: 공통 베이스
 import PropTypes from 'prop-types';
 
 const TONES = {
@@ -9,12 +10,13 @@ const TONES = {
   gray: 'bg-neutral text-muted',
 };
 
-/** Figma 의 Tag (둥근 알약) */
+const SIZES = { sm: 'text-2xs', md: 'text-label' };
+
+/** 둥근 알약 모양 태그 */
 export default function Chip({ tone = 'green', size = 'sm', className = '', children }) {
-  const text = size === 'md' ? 'text-[13px]' : 'text-[11px]';
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full px-2.5 py-1 font-medium whitespace-nowrap ${text} ${TONES[tone]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full px-2.5 py-1 font-medium ${SIZES[size]} ${TONES[tone]} ${className}`}
     >
       {children}
     </span>
@@ -23,7 +25,7 @@ export default function Chip({ tone = 'green', size = 'sm', className = '', chil
 
 Chip.propTypes = {
   tone: PropTypes.oneOf(Object.keys(TONES)),
-  size: PropTypes.oneOf(['sm', 'md']),
+  size: PropTypes.oneOf(Object.keys(SIZES)),
   className: PropTypes.string,
   children: PropTypes.node,
 };
