@@ -7,10 +7,14 @@ import Card from '../components/common/Card';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ErrorMessage from '../components/common/ErrorMessage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import Modal from '../components/common/Modal';
 import PageError from '../components/common/PageError';
 import VersionSelectModal from '../components/common/VersionSelectModal';
+import VersionUploadPanel from '../components/common/VersionUploadPanel';
+import ChatWidget from '../components/chat/ChatWidget';
 import DocumentInfoPanel from '../components/document/DocumentInfoPanel';
 import HistoryTimeline from '../components/document/HistoryTimeline';
+import PermissionPanel from '../components/document/PermissionPanel';
 import VersionPeekPanel from '../components/document/VersionPeekPanel';
 import VersionTable from '../components/document/VersionTable';
 import { documentService } from '../services/documentService';
@@ -68,6 +72,11 @@ function DocumentDetail({ documentId }) {
   const [deleteDocOpen, setDeleteDocOpen] = useState(false);
   const [deletingDoc, setDeletingDoc] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [permissionOpen, setPermissionOpen] = useState(false); // KJH 의 열람자 관리 모달
+  const [files, setFiles] = useState([]); // WJH 의 업로드 패널이 관리하는 고른 파일 (보내는 것은 이 페이지가 함)
+  const [uploadConfirmOpen, setUploadConfirmOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const seq = useRef(0); // 늦게 온 이전 응답이 화면을 덮지 않게
 
   // 사이드바 갱신 함수는 매번 새로 만들어질 수 있으므로 ref 로 최신 것만 부릅니다
@@ -185,6 +194,27 @@ function DocumentDetail({ documentId }) {
     }
   };
 
+  /** 고른 파일을 순서대로 올립니다. 서버는 하나라도 걸리면 전체를 거부합니다 (413: 20MB 초과, 400: 서버 문구) */
+  const uploadFiles = async () => {
+    if (uploading || files.length === 0) return;
+    setUploading(true);
+    setUploadError('');
+    try {
+      const result = await versionService.upload(documentId, files);
+      const count = result?.versions?.length ?? files.length;
+      setFiles([]);
+      setUploadConfirmOpen(false);
+      setFlash({ notice: `${count}개 버전을 올렸습니다. 분석이 끝나면 비교할 수 있습니다` });
+      await fetchAll({ silent: true }); // 서버가 준 버전 번호로 목록을 다시 그립니다
+      refreshRef.current?.();
+    } catch (e) {
+      setUploadConfirmOpen(false);
+      setUploadError(getErrorMessage(e)); // 고른 파일은 그대로 두어 고쳐서 다시 올릴 수 있게 합니다
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const removeDocument = async () => {
     if (deletingDoc) return;
     setDeletingDoc(true);
@@ -207,6 +237,14 @@ function DocumentDetail({ documentId }) {
   if (loading && !doc) return <LoadingSpinner />;
   if (!doc) return null;
 
+  // 올릴 버전 범위: 보낸 순서가 곧 버전 번호이므로 현재 최신 버전 다음부터 순서대로 매깁니다
+  const firstNo = doc.currentVersionNo + 1;
+  const lastNo = doc.currentVersionNo + files.length;
+  const range = files.length > 1 ? `v${firstNo}~v${lastNo}` : `v${firstNo}`;
+  let uploadLabel = '올릴 파일을 선택해 주세요';
+  if (uploading) uploadLabel = '올리는 중…';
+  else if (files.length > 0) uploadLabel = `${range}, ${files.length}개 버전 올리기`;
+
   return (
     <div className="flex flex-col gap-4 p-4 pb-24 md:px-8 md:py-7">
       {flash?.notice ? (
@@ -220,8 +258,16 @@ function DocumentDetail({ documentId }) {
         </Banner>
       ) : null}
 
-      {/* 열람자 관리 버튼·패널은 KJH 의 PermissionPanel 이 오면 연동합니다 (담당 간 약속) */}
-      <DocumentInfoPanel doc={doc} onSave={saveInfo} onDelete={() => setDeleteDocOpen(true)} />
+      <DocumentInfoPanel
+        doc={doc}
+        onSave={saveInfo}
+        onDelete={() => setDeleteDocOpen(true)}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => setPermissionOpen(true)}>
+            열람자
+          </Button>
+        }
+      />
 
       {/* 명세 8.1: 태블릿(768px)은 1열, 데스크톱(1280px)은 2열(버전·변천사). 사이드바가 768px부터 고정되어 본문이 좁으므로 lg(1024px)부터 2열 */}
       <div className="grid items-start gap-4 lg:grid-cols-2">
@@ -234,7 +280,26 @@ function DocumentDetail({ documentId }) {
             onSelect={(v) => setVersionParam(v.versionNo)}
             onDelete={setVersionToDelete}
           >
-            {/* WJH: VersionUploadPanel — 등록자(owned)일 때 업로드 영역이 여기 들어옵니다 (담당 간 약속) */}
+            {/* 업로드는 등록자만. 파일 고르기·순서·검증은 WJH 의 패널이, 올리기 버튼과 전송은 이 페이지가 합니다 */}
+            {doc.owned ? (
+              <div className="flex flex-col gap-3 border-t border-line pt-3">
+                <VersionUploadPanel files={files} onChange={setFiles} startVersionNo={doc.currentVersionNo + 1} disabled={uploading} />
+                {uploadError ? (
+                  <p role="alert" className="rounded-xl bg-danger-bg px-3 py-2.5 text-label text-danger">
+                    {uploadError}
+                  </p>
+                ) : null}
+                <Button
+                  disabled={files.length === 0 || uploading}
+                  onClick={() => {
+                    setUploadError('');
+                    setUploadConfirmOpen(true);
+                  }}
+                >
+                  {uploadLabel}
+                </Button>
+              </div>
+            ) : null}
           </VersionTable>
         </Card>
         <Card
@@ -259,8 +324,6 @@ function DocumentDetail({ documentId }) {
         </Card>
       </div>
 
-      {/* WJH: ChatWidget — 페이지 맨 끝에 한 번 (담당 간 약속) */}
-
       {selected ? (
         <VersionPeekPanel
           documentId={documentId}
@@ -281,6 +344,38 @@ function DocumentDetail({ documentId }) {
         onClose={() => setCompareOpen(false)}
       />
 
+      {permissionOpen ? (
+        <PermissionPanel
+          documentId={Number(documentId)}
+          owned={doc.owned}
+          uploadedByName={doc.uploadedByName}
+          onClose={() => setPermissionOpen(false)}
+        />
+      ) : null}
+
+      {/* 올리기 전 한 번 더 확인: 되돌릴 수 없는 삭제가 아니므로 빨간 확인창 대신 기본 모달을 씁니다 */}
+      <Modal
+        open={uploadConfirmOpen}
+        title="버전 올리기"
+        onClose={() => setUploadConfirmOpen(false)}
+        closeDisabled={uploading}
+        width="max-w-[420px]"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setUploadConfirmOpen(false)} disabled={uploading}>
+              취소
+            </Button>
+            <Button onClick={uploadFiles} disabled={uploading}>
+              {uploading ? '올리는 중…' : '올리기'}
+            </Button>
+          </>
+        }
+      >
+        <p className="py-3 text-body text-ink-2">
+          {range}, {files.length}개 버전을 올립니다. 올린 버전은 고칠 수 없습니다.
+        </p>
+      </Modal>
+
       <ConfirmDialog
         open={Boolean(versionToDelete)}
         message={versionToDelete ? `v${versionToDelete.versionNo} 버전을 삭제하시겠습니까?` : ''}
@@ -295,6 +390,9 @@ function DocumentDetail({ documentId }) {
         onConfirm={removeDocument}
         onCancel={() => setDeleteDocOpen(false)}
       />
+
+      {/* 챗봇은 페이지 맨 끝에 한 번. 버전 본문 패널보다 뒤에 둬서 패널이 열려 있어도 아이콘이 위에 보입니다 */}
+      <ChatWidget />
     </div>
   );
 }

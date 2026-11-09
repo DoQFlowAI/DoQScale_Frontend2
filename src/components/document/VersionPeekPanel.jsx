@@ -135,7 +135,8 @@ export default function VersionPeekPanel({ documentId, versionNo, onClose, onCom
           ✕
         </button>
       </div>
-      <div className="thin-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4 md:px-6">
+      {/* 아래 pb-20: 오른쪽 아래 챗봇 아이콘(56px)이 본문 끝을 가리지 않게 비워 둡니다 */}
+      <div className="thin-scroll min-h-0 flex-1 overflow-y-auto px-5 pb-20 pt-4 md:px-6">
         {data?.changeSummary ? (
           <div className="mb-4 flex flex-wrap items-start gap-2 rounded-xl bg-soft px-3.5 py-3">
             {label ? <Chip tone="green">{label}</Chip> : null}
