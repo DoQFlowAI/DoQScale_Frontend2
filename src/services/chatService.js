@@ -37,22 +37,38 @@ export const chatService = {
     const decoder = new TextDecoder();
     let buffer = '';
 
+    // 한 줄을 처리합니다. [DONE] 이면 true. 깨진 JSON 한 줄은 건너뛰어 나머지 답변은 계속 받습니다
+    const handleLine = (line) => {
+      if (!line.startsWith('data:')) return false;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') return true;
+
+      let event;
+      try {
+        event = JSON.parse(data);
+      } catch {
+        return false;
+      }
+      if (event?.token) onToken?.(event.token);
+      if (event?.sources) onSources?.(event.sources);
+      return false;
+    };
+
     while (true) {
       const { done, value } = await reader.read();
-      if (done) return;
+      if (done) {
+        // 연결이 끝났을 때 개행 없이 남은 마지막 줄도 처리합니다
+        buffer += decoder.decode();
+        if (buffer) handleLine(buffer);
+        return;
+      }
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop();
 
       for (const line of lines) {
-        if (!line.startsWith('data:')) continue;
-        const data = line.slice(5).trim();
-        if (data === '[DONE]') return;
-
-        const event = JSON.parse(data);
-        if (event.token) onToken?.(event.token);
-        if (event.sources) onSources?.(event.sources);
+        if (handleLine(line)) return;
       }
     }
   }

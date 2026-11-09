@@ -13,9 +13,12 @@
 /** 줄 칸의 색 구분. same 은 강조 없음, filler 는 줄 높이를 맞추려고 넣은 빈 줄 */
 export const TONE = { SAME: 'same', DEL: 'del', ADD: 'add', CHG: 'chg', FILLER: 'filler' };
 
-/** 본문을 줄 배열로. \r\n 은 \n 으로 정리하고, 빈 본문은 줄이 없는 것으로 봅니다 */
+/**
+ * 본문을 줄 배열로. \r\n 은 \n 으로 정리합니다. 빈 본문은 서버(Java split)와 같이 빈 줄 한 개로 셉니다
+ * (줄 수가 서버와 다르면 diffJson 의 줄 번호가 어긋납니다). 문자열이 아니면 줄이 없는 것으로 봅니다
+ */
 export function splitLines(text) {
-  if (typeof text !== 'string' || text === '') return [];
+  if (typeof text !== 'string') return [];
   return text.replace(/\r\n?/g, '\n').split('\n');
 }
 

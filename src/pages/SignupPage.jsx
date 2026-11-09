@@ -97,9 +97,8 @@ export default function SignupPage() {
       const message = getErrorMessage(err);
       if (err instanceof ApiError && err.status === 409) {
         setErrors({ email: message });
-      } else if (err instanceof ApiError && err.status === 400 && form.rankLevel === LEADER_RANK) {
-        setErrors({ signupKey: '직급키가 올바르지 않습니다.' });
       } else {
+        // 400 은 서버 문구 그대로 (키 오류도 일반 입력 오류와 같은 400 이라 화면도 구분하지 않음, 명세 4.4)
         setFormError(message);
       }
       setPending(false);
