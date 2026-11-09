@@ -1,0 +1,116 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      restart_all:
+        description: "Secrets를 바꿨을 때: 전체 서비스를 새 .env로 다시 띄움"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency: deploy
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/doqscale/doqflow-frontend:${{ github.sha }}
+            ghcr.io/doqscale/doqflow-frontend:latest
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, doqflow-ec2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync shared files
+        run: |
+          cp deploy/docker-compose.yml /opt/doqflow/
+          rm -rf /opt/doqflow/db && cp -r deploy/db /opt/doqflow/db
+          test -f /opt/doqflow/tags.env || printf 'FRONTEND_TAG=latest\nBACKEND_TAG=latest\nAI_TAG=latest\n' > /opt/doqflow/tags.env
+
+      - name: Write .env
+        working-directory: /opt/doqflow
+        env:
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          DB_APP_PASSWORD: ${{ secrets.DB_APP_PASSWORD }}
+          DB_MIGRATE_PASSWORD: ${{ secrets.DB_MIGRATE_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          AI_INTERNAL_KEY: ${{ secrets.AI_INTERNAL_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SIGNUP_KEY_LEAD: ${{ secrets.SIGNUP_KEY_LEAD }}
+        run: |
+          umask 077
+          cat > .env <<EOF
+          IMAGE_OWNER=doqscale
+          DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+          DB_APP_USER=${{ vars.DB_APP_USER }}
+          DB_APP_PASSWORD=${DB_APP_PASSWORD}
+          DB_MIGRATE_USER=${{ vars.DB_MIGRATE_USER }}
+          DB_MIGRATE_PASSWORD=${DB_MIGRATE_PASSWORD}
+          JWT_SECRET=${JWT_SECRET}
+          CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
+          SIGNUP_KEY_LEAD=${SIGNUP_KEY_LEAD}
+          AI_INTERNAL_KEY=${AI_INTERNAL_KEY}
+          GROQ_API_KEY=${GROQ_API_KEY}
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          EMBEDDING_MODEL=${{ vars.EMBEDDING_MODEL }}
+          EOF
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy
+        working-directory: /opt/doqflow
+        env:
+          RESTART_ALL: ${{ inputs.restart_all }}
+        run: |
+          flock .deploy.lock sh -c '
+            sed -i "s/^FRONTEND_TAG=.*/FRONTEND_TAG=${GITHUB_SHA}/" tags.env
+            DC="docker compose --env-file .env --env-file tags.env"
+            $DC pull frontend
+            $DC up -d --no-deps database frontend
+            if [ "$RESTART_ALL" = "true" ]; then
+              $DC up -d --no-deps --pull never $($DC ps --services)
+            fi
+          '
+          docker image prune -f
+
+      - name: Smoke test
+        run: |
+          sleep 10
+          curl -fsS http://localhost/ >/dev/null
