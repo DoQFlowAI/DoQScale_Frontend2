@@ -1,13 +1,29 @@
 // 소유: WJH (공통 레이아웃 틀)
+import { useState } from 'react';
 import PropTypes from 'prop-types';
-import { NavLink } from 'react-router-dom';
+import Button from './Button';
+import { NavLink, useNavigate } from 'react-router-dom';
 import DocumentTabList from '../document/DocumentTabList';
+import DocumentCreateModal from '../document/DocumentCreateModal';
+import { useAuthStore } from '../../store/authStore';
+import { LEADER_RANK } from '../../utils/format';
 
 const linkClass = ({ isActive }) =>
   `flex min-h-11 items-center truncate rounded-btn-sm px-3 text-body ${isActive ? 'bg-soft font-bold text-brand' : 'text-ink-2 hover:bg-th'
   }`;
 
 export default function Sidebar({ list, open = false, onClose }) {
+
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const isLeader = user?.rankLevel === LEADER_RANK;
+  const [createOpen, setCreateOpen] = useState(false);
+  const handleCreated = (documentId, flash) => {
+    setCreateOpen(false);
+    list.refresh();
+    navigate(`/documents/${documentId}`, { state: { flash } });
+  };
+
   return (
     <>
       {open ? <div aria-hidden="true" onClick={onClose} className="fixed inset-0 z-50 bg-black/40 md:hidden" /> : null}
@@ -18,6 +34,11 @@ export default function Sidebar({ list, open = false, onClose }) {
         <NavLink to="/" end className={linkClass}>
           대시보드
         </NavLink>
+        {isLeader ? (
+          <Button size="sm" className="w-full" onClick={() => setCreateOpen(true)}>
+            문서 만들기
+          </Button>
+        ) : null}
         <nav className="thin-scroll flex min-h-0 flex-col overflow-y-auto border-t border-line pt-3">
           <DocumentTabList
             documents={list.documents}
@@ -30,6 +51,7 @@ export default function Sidebar({ list, open = false, onClose }) {
           />
         </nav>
       </aside>
+      <DocumentCreateModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={handleCreated} />
     </>
   );
 }
