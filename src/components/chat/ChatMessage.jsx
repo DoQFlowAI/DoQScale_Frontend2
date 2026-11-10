@@ -27,6 +27,7 @@ export default function ChatMessage({ role, content, sources = [], masked = fals
                         {sources.map((source, index) => (
                             <li key={`${source.documentId}-${source.versionNo}-${index}`} className="text-label">
                                 <p className="text-muted">
+                                    {`[${index + 1}] `}
                                     <Link to={`/documents/${source.documentId}`} className="font-medium text-brand underline">
                                         {source.documentName}
                                     </Link>

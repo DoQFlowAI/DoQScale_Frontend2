@@ -223,6 +223,11 @@ function DocumentDetail({ documentId }) {
       refreshRef.current?.();
       navigate('/', { replace: true });
     } catch (e) {
+      if (isNotFound(e)) {
+        refreshRef.current?.();
+        navigate('/', { replace: true });
+        return;
+      }
       setDeleteDocOpen(false);
       setFlash({ error: getErrorMessage(e) });
       setDeletingDoc(false);
@@ -348,7 +353,8 @@ function DocumentDetail({ documentId }) {
         <PermissionPanel
           documentId={Number(documentId)}
           owned={doc.owned}
-          uploadedByName={doc.uploadedByName}
+          uploadedByName={doc.uploadedBy?.name}
+          uploadedByEmail={doc.uploadedBy?.email}
           onClose={() => setPermissionOpen(false)}
         />
       ) : null}

@@ -16,8 +16,6 @@ import { formatDate, formatFileSize } from '../../utils/format';
  * 페이지는 이동하지 않고, 열림 상태는 주소 쿼리(?version=3)로 페이지가 관리합니다.
  * 데스크톱은 오른쪽 절반(뒤 화면은 그대로 보이고 스크롤도 됨), 모바일(768px 미만)은 전체 화면입니다.
  *
- * 본문은 버전 단건 API(V-03)의 contentText 입니다. 이 필드는 아직 04 API 설계서·Backend 에 없고 목 서버만 줍니다.
- *
  * @param versionNo 지금 보여 줄 버전. 바뀌면 패널은 그대로 두고 내용만 바꿉니다
  * @param onClose 닫기 (버튼·Esc)
  * @param onCompare (versionNo) 직전 버전과 비교. 없으면 [직전 버전과 비교] 버튼을 숨김
@@ -34,8 +32,11 @@ export default function VersionPeekPanel({ documentId, versionNo, onClose, onCom
     const mine = ++seq.current;
     setView({ no: versionNo, status: 'loading', data: null, error: null });
     try {
-      const result = await versionService.get(documentId, versionNo);
-      if (mine === seq.current) setView({ no: versionNo, status: 'ok', data: result, error: null });
+      const [info, text] = await Promise.all([
+        versionService.get(documentId, versionNo),
+        versionService.content(documentId, versionNo),
+      ]);
+      if (mine === seq.current) setView({ no: versionNo, status: 'ok', data: { ...info, ...text }, error: null });
     } catch (e) {
       if (mine === seq.current) setView({ no: versionNo, status: 'error', data: null, error: e });
     }
@@ -93,10 +94,20 @@ export default function VersionPeekPanel({ documentId, versionNo, onClose, onCom
     );
   } else if (!data) body = null;
   else if (!ready) body = <p className="py-6 text-center text-sm text-muted">아직 본문을 볼 수 없습니다</p>;
-  else if (!data.contentText) body = <p className="py-6 text-center text-sm text-muted">본문을 불러올 수 없습니다</p>;
+  else if (data.content == null) body = <p className="py-6 text-center text-sm text-muted">본문을 불러올 수 없습니다</p>;
   else {
-    // 본문은 텍스트로만 그립니다 (명세 9.1). 문장마다 줄바꿈이 있으므로 그대로 보여 줍니다
-    body = <div className="whitespace-pre-wrap break-words text-body leading-7 text-ink-2">{data.contentText}</div>;
+    // 본문은 텍스트로만 그립니다 (명세 9.1). md·xml도 해석하지 않고 줄바꿈 그대로 보여 줍니다
+    body = (
+      <>
+        {data.kind === 'DOC' || data.truncated ? (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {data.kind === 'DOC' ? <Chip tone="gray">추출한 본문입니다</Chip> : null}
+            {data.truncated ? <p className="text-caption text-muted">본문이 길어 앞부분만 보여 줍니다</p> : null}
+          </div>
+        ) : null}
+        <div className="whitespace-pre-wrap break-words text-body leading-7 text-ink-2">{data.content}</div>
+      </>
+    );
   }
 
   return (

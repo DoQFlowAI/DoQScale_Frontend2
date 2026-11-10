@@ -6,7 +6,7 @@ import Icon from './Icon';
 import { formatFileSize } from '../../utils/format';
 
 const fileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
-const ALLOWED_FILE_TYPES = ['pdf', 'docx'];
+const ALLOWED_FILE_TYPES = ['pdf', 'docx', 'txt', 'md', 'csv', 'json', 'xml', 'yaml', 'yml', 'log'];
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const MAX_FILE_COUNT = 10;
 
@@ -118,7 +118,7 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                 type="file"
                 multiple
                 onChange={handleSelect}
-                accept=".pdf, .docx"
+                accept=".pdf,.docx,.txt,.md,.csv,.json,.xml,.yaml,.yml,.log"
                 className="hidden"
                 disabled={disabled}
             />
@@ -135,7 +135,7 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                     inputRef.current.click()}>
                     파일 선택
                 </Button>
-                <p className="text-caption text-muted">PDF·DOCX, 파일당 20MB, 최대 10개</p>
+                <p className="text-caption text-muted">PDF·DOCX·텍스트 파일, 파일당 20MB, 최대 10개</p>
             </div>
 
             {errors.length > 0 && (
@@ -164,10 +164,6 @@ export default function VersionUploadPanel({ files, onChange, startVersionNo, di
                                 endDrag();
                             }}
                             onDragEnd={endDrag}
-                            isFirst={index === 0}
-                            isLast={index === files.length - 1}
-                            onMoveUp={() => reorder(index, index - 1)}
-                            onMoveDown={() => reorder(index, index + 1)}
                             onRemove={() => remove(index)}
                         />
                     ))}
@@ -183,7 +179,7 @@ function getRejectReason(file) {
     const extension = dot >= 0 ? file.name.slice(dot + 1).toLowerCase() : '';
 
     if (!ALLOWED_FILE_TYPES.includes(extension)) {
-        return 'PDF 또는 DOCX 파일만 업로드할 수 있습니다';
+        return 'PDF·DOCX·텍스트 파일(txt, md, csv, json, xml, yaml, yml, log)만 업로드할 수 있습니다';
     }
 
     if (file.size === 0) {
@@ -197,7 +193,7 @@ function getRejectReason(file) {
     return null;
 }
 
-function FileRow({ file, order, versionNo, dragging, over, disabled, isFirst, isLast, onDragStart, onDragOver, onDrop, onDragEnd, onMoveUp, onMoveDown, onRemove }) {
+function FileRow({ file, order, versionNo, dragging, over, disabled, onDragStart, onDragOver, onDrop, onDragEnd, onRemove }) {
     return (
         <li
             draggable={!disabled}
@@ -226,13 +222,6 @@ function FileRow({ file, order, versionNo, dragging, over, disabled, isFirst, is
             <span className="min-w-0 flex-1 truncate text-body" title={file.name}>{file.name}</span>
             <span className="text-caption text-muted">{formatFileSize(file.size)}</span>
             <span className="text-label font-medium text-brand">v{versionNo}</span>
-            {/* 터치·키보드로도 순서를 바꿀 수 있게 드래그와 별도로 둡니다 (명세 4.4) */}
-            <Button variant="outline" size="sm" onClick={onMoveUp} disabled={disabled || isFirst} aria-label={`${file.name} 위로`}>
-                위
-            </Button>
-            <Button variant="outline" size="sm" onClick={onMoveDown} disabled={disabled || isLast} aria-label={`${file.name} 아래로`}>
-                아래
-            </Button>
             <Button variant="ghost" size="sm" onClick={onRemove} disabled={disabled} aria-label={`${file.name} 빼기`} className="hover:text-danger">
                 <Icon name="trash" />
             </Button>
@@ -258,9 +247,5 @@ FileRow.propTypes = {
     onDrop: PropTypes.func.isRequired,
     onDragEnd: PropTypes.func.isRequired,
     onRemove: PropTypes.func.isRequired,
-    onMoveUp: PropTypes.func.isRequired,
-    onMoveDown: PropTypes.func.isRequired,
-    isFirst: PropTypes.bool.isRequired,
-    isLast: PropTypes.bool.isRequired,
     disabled: PropTypes.bool.isRequired,
 };

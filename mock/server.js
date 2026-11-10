@@ -29,6 +29,8 @@ const TEXT = {
 };
 const text = (n) => TEXT[n].join('\n');
 
+const TEXT_EXT = /\.(txt|md|csv|json|xml|yaml|yml|log)$/i;
+
 const ver = (versionNo, originalFilename, body, status = 'READY', age = 5) => ({
   versionNo, originalFilename, status, createdAt: daysAgo(age), uploadedBy: null, text: body, readyAt: null,
 });
@@ -43,17 +45,27 @@ const SUMMARY = {
 let nextDocId = 10;
 let nextPermId = 100;
 const documents = [
-  { documentId: 1, name: '배포 가이드', description: '서비스 배포 절차와 승인 체계', ownerUuid: 'u-leader', createdAt: daysAgo(10),
-    versions: [1, 2, 3, 4].map((n) => ver(n, `deploy_guide_v${n}.${n === 4 ? 'docx' : 'pdf'}`, text(n), 'READY', 12 - n * 2)) },
-  { documentId: 2, name: '보안 점검 체크리스트', description: '분기별 보안 점검 항목', ownerUuid: 'u-leader', createdAt: daysAgo(8),
-    versions: [ver(1, 'security_v1.pdf', text(1), 'READY', 8), ver(2, 'security_v2.pdf', text(2), 'PROCESSING', 0)] },
-  { documentId: 3, name: '회의록 양식', description: '', ownerUuid: 'u-leader', createdAt: daysAgo(7),
-    versions: [ver(1, 'minutes_v1.docx', text(1), 'READY', 7), ver(2, 'minutes_v2.docx', text(2), 'FAILED', 6)] },
+  {
+    documentId: 1, name: '배포 가이드', description: '서비스 배포 절차와 승인 체계', ownerUuid: 'u-leader', createdAt: daysAgo(10),
+    versions: [1, 2, 3, 4].map((n) => ver(n, `deploy_guide_v${n}.${n === 4 ? 'docx' : 'pdf'}`, text(n), 'READY', 12 - n * 2))
+  },
+  {
+    documentId: 2, name: '보안 점검 체크리스트', description: '분기별 보안 점검 항목', ownerUuid: 'u-leader', createdAt: daysAgo(8),
+    versions: [ver(1, 'security_v1.pdf', text(1), 'READY', 8), ver(2, 'security_v2.pdf', text(2), 'PROCESSING', 0)]
+  },
+  {
+    documentId: 3, name: '회의록 양식', description: '', ownerUuid: 'u-leader', createdAt: daysAgo(7),
+    versions: [ver(1, 'minutes_v1.docx', text(1), 'READY', 7), ver(2, 'minutes_v2.docx', text(2), 'FAILED', 6)]
+  },
   { documentId: 4, name: '개인정보 처리 지침', description: '', ownerUuid: 'u-leader', createdAt: daysAgo(3), versions: [] },
-  { documentId: 5, name: '신입 온보딩 안내', description: '입사 첫 주 안내', ownerUuid: 'u-leader2', createdAt: daysAgo(6),
-    versions: [ver(1, 'onboarding.docx', text(4), 'READY', 6)] },
-  { documentId: 6, name: '장애 대응 매뉴얼', description: '장애 등급별 대응', ownerUuid: 'u-leader2', createdAt: daysAgo(2),
-    versions: [ver(1, 'incident.pdf', text(3), 'READY', 2)] },
+  {
+    documentId: 5, name: '신입 온보딩 안내', description: '입사 첫 주 안내', ownerUuid: 'u-leader2', createdAt: daysAgo(6),
+    versions: [ver(1, 'onboarding.docx', text(4), 'READY', 6)]
+  },
+  {
+    documentId: 6, name: '장애 대응 매뉴얼', description: '장애 등급별 대응', ownerUuid: 'u-leader2', createdAt: daysAgo(2),
+    versions: [ver(1, 'incident.pdf', text(3), 'READY', 2)]
+  },
 ].map((d) => ({ ...d, updatedAt: d.createdAt }));
 
 const perm = (documentId, uuid, status, age) => ({
@@ -129,7 +141,7 @@ function diffJson(a, b) {
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
   const blocks = [];
   let cur = null;
-  for (let i = 0, j = 0; i < n || j < m; ) {
+  for (let i = 0, j = 0; i < n || j < m;) {
     if (i < n && j < m && a[i] === b[j]) {
       if (cur) blocks.push(cur);
       cur = null;
@@ -159,8 +171,7 @@ function historyOf(doc) {
 }
 
 // 버전 목록·단건 응답 (API-V-02·V-03, 04 5.11). changeType·changeSummary 는 직전 버전 대비 구간 요약.
-// contentText 는 버전 본문 패널(필수 기능)용입니다. 04·Backend 반영 대기 중. READY 일 때만 본문, 아니면 null
-function versionDetailOf(doc, v, { withText = false } = {}) {
+function versionDetailOf(doc, v) {
   const seg = historyOf(doc).segments.find((s) => s.to === v.versionNo);
   const ok = seg?.summaryStatus === 'OK' && v.status === 'READY'; // 분석이 끝난 버전만 요약이 있음
   return {
@@ -168,7 +179,6 @@ function versionDetailOf(doc, v, { withText = false } = {}) {
     fileSize: Buffer.byteLength(v.text, 'utf8'),
     changeType: ok ? seg.changeType : null,
     changeSummary: ok ? seg.summary : null,
-    ...(withText && { contentText: v.status === 'READY' ? v.text : null }),
   };
 }
 
@@ -338,7 +348,8 @@ async function handle(req, res) {
   const owner = doc.ownerUuid === me.uuid;
 
   if (sub === '' && method === 'GET') {
-    return ok({ ...summaryOf(doc, me), uploadedByName: byUuid(doc.ownerUuid).name, versions: doc.versions.map(versionOf) });
+    const u = byUuid(doc.ownerUuid);
+    return ok({ ...summaryOf(doc, me), uploadedBy: { name: u.name, email: u.email, rankLevel: u.rankLevel }, versions: doc.versions.map(versionOf) });
   }
   if (sub === '' && method === 'PATCH') {
     if (!owner) return forbidden();
@@ -362,6 +373,7 @@ async function handle(req, res) {
     const list = permissions.filter((p) => p.documentId === doc.documentId && (owner || p.status === 'ACCEPTED'));
     return ok(list.map((p) => {
       const { uuid, name, email, rankLevel } = byUuid(p.uuid);
+      if (!owner) return { name, rankLevel, email };
       return { permissionId: p.permissionId, uuid, name, email, rankLevel, status: p.status, grantedAt: p.grantedAt, respondedAt: p.respondedAt };
     }));
   }
@@ -387,22 +399,32 @@ async function handle(req, res) {
     // multipart 본문에서 파일 이름만 꺼냅니다. 이름에 dup 이 들어가면 "직전 버전과 같은 내용" 으로 거부
     const names = [...raw.toString('latin1').matchAll(/filename="([^"]*)"/g)].map((x) => Buffer.from(x[1], 'latin1').toString('utf8'));
     if (names.length < 1 || names.length > 10) return invalid('파일은 한 번에 1~10개까지 올릴 수 있습니다');
-    if (names.some((n) => !/\.(pdf|docx)$/i.test(n) || /[\\/]/.test(n))) return invalid('PDF·DOCX 파일만 올릴 수 있습니다');
+    if (names.some((n) => !(/\.(pdf|docx)$/i.test(n) || TEXT_EXT.test(n)) || /[\\/]/.test(n))) return invalid('지원하지 않는 파일 형식입니다');
     if (names.some((n) => /dup/i.test(n))) return invalid('직전 버전과 내용이 같은 파일입니다');
     const created = names.map((n) => {
       const no = currentNo(doc) + 1;
       const prev = doc.versions.at(-1)?.text ?? text(1);
-      doc.versions.push({ ...ver(no, n, `${prev}\nv${no} 에서 추가된 문장이다.`, 'PROCESSING', 0), uploadedBy: me.uuid });
-      return { versionNo: no, status: 'PROCESSING' };
+      const status = TEXT_EXT.test(n) ? 'READY' : 'PROCESSING';
+      doc.versions.push({ ...ver(no, n, `${prev}\nv${no} 에서 추가된 문장이다.`, status, 0), uploadedBy: me.uuid });
+      return { versionNo: no, status };
     });
     doc.updatedAt = now();
     return ok({ documentId: doc.documentId, currentVersionNo: currentNo(doc), versions: created }, 201);
   }
   if (sub === '/versions' && method === 'GET') return ok(doc.versions.map((v) => versionDetailOf(doc, v)));
+  if ((m = sub.match(/^\/versions\/(\d+)\/content$/)) && method === 'GET') {
+    const v = doc.versions.find((x) => x.versionNo === Number(m[1]));
+    if (!v) return notFoundDoc();
+    const kind = /\.(pdf|docx)$/i.test(v.originalFilename) ? 'DOC' : 'TEXT';
+    return ok({
+      versionNo: v.versionNo, originalFilename: v.originalFilename, kind,
+      content: v.status === 'READY' ? v.text : null, truncated: /long/i.test(v.originalFilename)
+    });
+  }
   if ((m = sub.match(/^\/versions\/(\d+)$/))) {
     const i = doc.versions.findIndex((v) => v.versionNo === Number(m[1]));
     if (i < 0) return notFoundDoc();
-    if (method === 'GET') return ok(versionDetailOf(doc, doc.versions[i], { withText: true }));
+    if (method === 'GET') return ok(versionDetailOf(doc, doc.versions[i]));
     if (method === 'DELETE') {
       if (!owner) return forbidden();
       if (doc.versions.length <= 1) return invalid('마지막 버전은 삭제할 수 없습니다');
