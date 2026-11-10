@@ -155,7 +155,7 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
         <div className="min-w-0 flex-1 basis-60">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             {/* 문서 이름·설명은 사용자가 쓴 글이므로 텍스트로만 그립니다 (명세 9.1) */}
-            <h1 className="break-words text-display font-bold text-ink">{doc.name}</h1>
+            <h1 className="min-w-0 break-words text-display font-bold text-ink">{doc.name}</h1>
             <StatusBadge status={doc.status} />
             {doc.owned ? (
               <Button variant="outline" size="sm" onClick={startEdit}>
