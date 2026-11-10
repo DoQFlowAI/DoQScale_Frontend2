@@ -74,12 +74,9 @@ export default function Sidebar({ list, open = false, onClose }) {
         aria-label="문서 목록"
         className={`fixed inset-y-0 left-0 z-50 w-70 max-w-[85vw] shrink-0 flex-col gap-3 bg-white px-4 py-5 md:static md:z-auto md:max-w-none md:flex ${open ? 'flex' : 'hidden'}`}
       >
-        {isLeader ? (
-          <Button size="sm" className="w-full" onClick={() => setCreateOpen(true)}>
-            문서 만들기
-          </Button>
-        ) : null}
-        <nav className="thin-scroll flex min-h-0 flex-col overflow-y-auto border-t border-line pt-3">
+        {/* Figma: "문서" 구역 라벨 → 목록(남는 높이를 차지) → [+ 문서 만들기]는 맨 아래 고정 */}
+        <p className="px-3 text-caption text-muted">문서</p>
+        <nav className="thin-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
           <DocumentTabList
             documents={list.documents}
             hasMore={list.hasMore}
@@ -91,6 +88,11 @@ export default function Sidebar({ list, open = false, onClose }) {
             onDelete={askDelete}
           />
         </nav>
+        {isLeader ? (
+          <Button className="w-full" onClick={() => setCreateOpen(true)}>
+            <span aria-hidden="true">+</span> 문서 만들기
+          </Button>
+        ) : null}
       </aside>
       <DocumentCreateModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={handleCreated} />
       <ConfirmDialog

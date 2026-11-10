@@ -37,15 +37,17 @@ export default function ChatWidget() {
                 ref={panelRef}
                 role="dialog"
                 aria-label="챗봇"
-                className={`fixed inset-0 z-40 flex-col bg-white p-4 md:inset-auto md:right-6 md:bottom-24 md:h-140 md:w-95 md:rounded-panel md:p-5 md:shadow-modal ${open ? 'flex' : 'hidden'}`}
+                className={`fixed inset-0 z-40 flex-col overflow-hidden bg-white md:inset-auto md:right-6 md:bottom-24 md:h-140 md:w-95 md:rounded-panel md:shadow-modal ${open ? 'flex' : 'hidden'}`}
             >
-                <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-title font-bold text-ink">질의응답</h2>
+                <div className="flex items-center justify-between border-b border-line px-5 py-2">
+                    <h2 className="text-title font-bold text-ink">챗봇</h2>
                     <Button variant="ghost" size="sm" onClick={close} aria-label="챗봇 닫기">
                         <Icon name="close" />
                     </Button>
                 </div>
-                <ChatInterface active={open} />
+                <div className="flex min-h-0 flex-1 flex-col p-4">
+                    <ChatInterface active={open} compact />
+                </div>
             </div>
 
             <button

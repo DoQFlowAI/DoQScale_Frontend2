@@ -12,10 +12,9 @@ import RankBadge from '../common/RankBadge';
 import StatusBadge from '../common/StatusBadge';
 import { documentService } from '../../services/documentService';
 import { getErrorMessage } from '../../utils/errors';
-import { formatDate } from '../../utils/format';
 
 const CONFIRM_TEXT = {
-  ACCEPTED: '열람 권한을 회수하시겠습니까?',
+  ACCEPTED: '열람자를 회수하시겠습니까?',
   PENDING: '초대를 취소하시겠습니까?',
   REJECTED: '거절된 초대 기록을 삭제하시겠습니까?',
 };
@@ -30,17 +29,16 @@ const CONFIRM_LABEL = {
   REJECTED: '삭제',
 };
 
-function PersonRow({ name, email, rankLevel, dateLabel, children }) {
+function PersonRow({ name, email, rankLevel, children }) {
   return (
-    <li className="flex flex-wrap items-center gap-2.5 rounded-xl border border-line px-3.5 py-2.5">
+    <li className="flex flex-wrap items-center gap-3 rounded-xl border border-line px-4 py-3">
       <span aria-hidden="true" className="h-8 w-8 shrink-0 rounded-full bg-chip" />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex flex-wrap items-center gap-1.5">
-          <span className="truncate text-body font-medium text-ink">{name}</span>
+          <span className="truncate text-body font-bold text-ink">{name}</span>
           {rankLevel ? <RankBadge rankLevel={rankLevel} /> : null}
         </span>
         {email ? <span className="truncate text-caption text-muted">{email}</span> : null}
-        {dateLabel ? <span className="text-caption text-muted">{dateLabel}</span> : null}
       </div>
       <div className="flex shrink-0 items-center gap-2">{children}</div>
     </li>
@@ -51,7 +49,6 @@ PersonRow.propTypes = {
   name: PropTypes.string.isRequired,
   email: PropTypes.string,
   rankLevel: PropTypes.number,
-  dateLabel: PropTypes.string,
   children: PropTypes.node,
 };
 
@@ -132,6 +129,8 @@ export default function PermissionPanel({ documentId, owned, uploadedByName = ''
         title={owned ? '열람자 관리' : '열람자'}
         onClose={onClose}
         closeDisabled={inviting || revoking || Boolean(target)}
+        placement="right"
+        width="max-w-[480px]"
       >
         <div className="flex flex-col gap-3 pb-2">
           <div className="flex flex-col gap-1.5">
@@ -187,16 +186,12 @@ export default function PermissionPanel({ documentId, owned, uploadedByName = ''
           ) : (
             <ul className="flex flex-col gap-2">
               {visible.map((p, index) => {
-                const dateText = owned
-                  ? `${p.respondedAt ? '응답' : '초대'} ${formatDate(p.respondedAt || p.grantedAt)}`
-                  : undefined;
                 return (
                   <PersonRow
                     key={p.permissionId ?? p.uuid ?? index}
                     name={p.name}
                     email={p.email}
                     rankLevel={p.rankLevel}
-                    dateLabel={dateText}
                   >
                     {owned ? (
                       <>

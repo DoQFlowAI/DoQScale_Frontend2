@@ -113,8 +113,8 @@ function CreateModalBody({ onClose, onCreated }) {
           disabled={pending}
         />
         <div className="flex flex-col gap-1.5">
-          <span className="text-label font-medium text-ink-2">첫 버전 파일 (선택)</span>
-          <VersionUploadPanel files={files} onChange={setFiles} startVersionNo={1} disabled={pending} />
+          <span className="text-label font-medium text-ink-2">업로드할 파일 (선택)</span>
+          <VersionUploadPanel files={files} onChange={setFiles} startVersionNo={1} disabled={pending} title="" />
         </div>
         <InviteeEmailInput invitees={invitees} onChange={setInvitees} disabled={pending} />
         {formError ? (

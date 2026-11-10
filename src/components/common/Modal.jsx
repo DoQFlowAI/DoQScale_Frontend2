@@ -2,8 +2,11 @@
 import { useEffect, useId, useRef } from 'react';
 import PropTypes from 'prop-types';
 
-/** 가운데 모달 틀: 딤 배경, Esc 닫기, 열 때 포커스 이동·닫을 때 복귀, 뒤 화면 스크롤 잠금 */
-export default function Modal({ open, title, subtitle, onClose, width = 'max-w-[640px]', footer, children, closeDisabled = false }) {
+/**
+ * 가운데 모달 틀: 딤 배경, Esc 닫기, 열 때 포커스 이동·닫을 때 복귀, 뒤 화면 스크롤 잠금.
+ * placement="right" 이면 오른쪽에서 전체 높이로 열리는 패널 모양이 됩니다 (동작은 같음, Figma 열람자 관리).
+ */
+export default function Modal({ open, title, subtitle, onClose, width = 'max-w-[640px]', footer, children, closeDisabled = false, placement = 'center' }) {
   const titleId = useId();
   const dialogRef = useRef(null);
   // Esc 처리에서 항상 최신 onClose 를 부르도록 ref 에 둡니다
@@ -32,8 +35,10 @@ export default function Modal({ open, title, subtitle, onClose, width = 'max-w-[
   if (!open) return null;
   const close = () => !closeDisabled && onClose?.();
 
+  const side = placement === 'right';
+
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+    <div className={`fixed inset-0 z-60 flex ${side ? 'justify-end' : 'items-center justify-center p-4'}`}>
       <div className="absolute inset-0 bg-black/40" onClick={close} aria-hidden="true" />
       <div
         ref={dialogRef}
@@ -41,7 +46,9 @@ export default function Modal({ open, title, subtitle, onClose, width = 'max-w-[
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative flex max-h-[calc(100vh-32px)] w-full ${width} flex-col rounded-3xl bg-white shadow-modal outline-none`}
+        className={`relative flex w-full ${width} flex-col bg-white shadow-modal outline-none ${
+          side ? 'h-full rounded-l-panel' : 'max-h-[calc(100vh-32px)] rounded-3xl'
+        }`}
       >
         <div className="flex items-start gap-3 px-7 pb-3 pt-7">
           <div className="min-w-0 flex-1">
@@ -76,4 +83,5 @@ Modal.propTypes = {
   footer: PropTypes.node,
   children: PropTypes.node,
   closeDisabled: PropTypes.bool,
+  placement: PropTypes.oneOf(['center', 'right']),
 };

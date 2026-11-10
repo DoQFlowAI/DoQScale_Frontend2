@@ -34,7 +34,7 @@ function endAnswer(answerId) {
     }
 }
 
-export default function ChatInterface({ active = true }) {
+export default function ChatInterface({ active = true, compact = false }) {
     const sessionId = useChatStore((s) => s.sessionId);
     const messages = useChatStore((s) => s.messages);
     const isLoading = useChatStore((s) => s.isLoading);
@@ -152,13 +152,14 @@ export default function ChatInterface({ active = true }) {
                 )}
             </div>
 
-            {error && <p role="alert" className="text-label text-danger">{error}</p>}
+            {error && <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-label text-danger">{error}</p>}
 
-            <ChatInput onSend={handleSend} disabled={isLoading || rateLimited} />
+            <ChatInput onSend={handleSend} disabled={isLoading || rateLimited} showCount={!compact} />
         </div>
     );
 }
 
 ChatInterface.propTypes = {
     active: PropTypes.bool,
+    compact: PropTypes.bool, // 챗봇 패널처럼 좁은 곳: 입력창 글자 수 표시를 숨김
 };

@@ -237,7 +237,14 @@ function DocumentDetail({ documentId }) {
   if (failure) {
     const traceId = failure instanceof ApiError ? failure.traceId : '';
     // 없는 문서·권한 밖 문서는 구분하지 않습니다 (서버가 둘 다 404, 명세 9.6)
-    return <PageError message={getErrorMessage(failure)} traceId={traceId} onRetry={isNotFound(failure) ? undefined : () => fetchAll()} />;
+    return (
+      <PageError
+        code={isNotFound(failure) ? '404' : undefined}
+        message={getErrorMessage(failure)}
+        traceId={traceId}
+        onRetry={isNotFound(failure) ? undefined : () => fetchAll()}
+      />
+    );
   }
   if (loading && !doc) return <LoadingSpinner />;
   if (!doc) return null;
@@ -246,9 +253,7 @@ function DocumentDetail({ documentId }) {
   const firstNo = doc.currentVersionNo + 1;
   const lastNo = doc.currentVersionNo + files.length;
   const range = files.length > 1 ? `v${firstNo}~v${lastNo}` : `v${firstNo}`;
-  let uploadLabel = '올릴 파일을 선택해 주세요';
-  if (uploading) uploadLabel = '올리는 중…';
-  else if (files.length > 0) uploadLabel = `${range}, ${files.length}개 버전 올리기`;
+  const uploadLabel = uploading ? '올리는 중…' : `${range}, ${files.length}개 버전 올리기`;
 
   return (
     <div className="flex flex-col gap-4 p-4 pb-24 md:px-8 md:py-7">
@@ -268,15 +273,16 @@ function DocumentDetail({ documentId }) {
         onSave={saveInfo}
         onDelete={() => setDeleteDocOpen(true)}
         actions={
-          <Button variant="outline" size="sm" onClick={() => setPermissionOpen(true)}>
-            열람자
+          // Figma: 등록자는 [열람자 관리], 열람만 하는 사람은 [열람자 보기]
+          <Button variant="outline" onClick={() => setPermissionOpen(true)}>
+            {doc.owned ? '열람자 관리' : '열람자 보기'}
           </Button>
         }
       />
 
-      {/* 명세 8.1: 태블릿(768px)은 1열, 데스크톱(1280px)은 2열(버전·변천사). 사이드바가 768px부터 고정되어 본문이 좁으므로 lg(1024px)부터 2열 */}
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <Card title="버전">
+      {/* 명세 8.1: 태블릿(768px)은 1열, 데스크톱(1280px)은 2열(버전·변천사). 사이드바가 768px부터 고정되어 본문이 좁으므로 lg(1024px)부터 2열. Figma 비율은 560 : 516, 간격 20 */}
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,560fr)_minmax(0,516fr)] lg:gap-5">
+        <Card>
           <VersionTable
             versions={doc.versions}
             currentVersionNo={doc.currentVersionNo}
@@ -287,22 +293,39 @@ function DocumentDetail({ documentId }) {
           >
             {/* 업로드는 등록자만. 파일 고르기·순서·검증은 WJH 의 패널이, 올리기 버튼과 전송은 이 페이지가 합니다 */}
             {doc.owned ? (
-              <div className="flex flex-col gap-3 border-t border-line pt-3">
+              <div className="flex flex-col gap-3">
                 <VersionUploadPanel files={files} onChange={setFiles} startVersionNo={doc.currentVersionNo + 1} disabled={uploading} />
                 {uploadError ? (
                   <p role="alert" className="rounded-xl bg-danger-bg px-3 py-2.5 text-label text-danger">
                     {uploadError}
                   </p>
                 ) : null}
-                <Button
-                  disabled={files.length === 0 || uploading}
-                  onClick={() => {
-                    setUploadError('');
-                    setUploadConfirmOpen(true);
-                  }}
-                >
-                  {uploadLabel}
-                </Button>
+                {/* Figma: 파일을 고른 뒤에만 [취소]와 [vN~vM, k개 버전 올리기]가 나타납니다 */}
+                {files.length > 0 ? (
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={uploading}
+                      onClick={() => {
+                        setFiles([]);
+                        setUploadError('');
+                      }}
+                    >
+                      취소
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={uploading}
+                      onClick={() => {
+                        setUploadError('');
+                        setUploadConfirmOpen(true);
+                      }}
+                    >
+                      {uploadLabel}
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </VersionTable>
@@ -384,7 +407,7 @@ function DocumentDetail({ documentId }) {
 
       <ConfirmDialog
         open={Boolean(versionToDelete)}
-        message={versionToDelete ? `v${versionToDelete.versionNo} 버전을 삭제하시겠습니까?` : ''}
+        message={versionToDelete ? '이 버전을 삭제하시겠습니까?' : ''}
         pending={deletingVersion}
         onConfirm={removeVersion}
         onCancel={() => setVersionToDelete(null)}

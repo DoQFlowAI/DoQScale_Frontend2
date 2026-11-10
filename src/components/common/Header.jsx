@@ -38,7 +38,7 @@ export default function Header({ menuOpen = false, onMenuClick, onInvitationAcce
       >
         <Icon name="menu" />
       </button>
-      <Link to="/" className="min-w-0 truncate text-[length:clamp(14px,calc((100vw_-_280px)/5.5),18px)] font-bold text-white md:text-heading">
+      <Link to="/" className="min-w-0 truncate py-3 text-[length:clamp(14px,calc((100vw_-_280px)/5.5),18px)] font-bold text-white md:py-0 md:text-heading">
         DoQFlow AI
       </Link>
       <div className="flex-1" />

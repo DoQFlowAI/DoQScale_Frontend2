@@ -193,7 +193,7 @@ export default function SignupPage() {
         </Button>
         <p className="text-center text-label text-muted">
           이미 계정이 있으신가요?{' '}
-          <Link to="/login" className="font-bold text-brand hover:underline">
+          <Link to="/login" className="inline-flex min-h-11 min-w-11 items-center justify-center font-bold text-brand hover:underline">
             로그인
           </Link>
         </p>

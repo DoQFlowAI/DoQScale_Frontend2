@@ -121,7 +121,14 @@ function CompareResult({ documentId }) {
   if (failure) {
     const traceId = failure instanceof ApiError ? failure.traceId : '';
     // 없는 문서(404)는 다시 시도해도 같으므로 다시 시도 버튼을 두지 않습니다
-    return <PageError message={getErrorMessage(failure)} traceId={traceId} onRetry={isNotFound(failure) ? undefined : load} />;
+    return (
+      <PageError
+        code={isNotFound(failure) ? '404' : undefined}
+        message={getErrorMessage(failure)}
+        traceId={traceId}
+        onRetry={isNotFound(failure) ? undefined : load}
+      />
+    );
   }
   if (loading && !doc) return <LoadingSpinner />;
 
@@ -135,7 +142,7 @@ function CompareResult({ documentId }) {
           ← 문서로 돌아가기
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="min-w-0 max-w-full break-words text-title font-bold text-ink">{doc?.name}</h1>
+          <h1 className="min-w-0 max-w-full break-words text-display font-bold text-ink">{doc?.name}</h1>
           {result ? (
             <>
               <Chip tone="soft" size="md">
@@ -160,7 +167,7 @@ function CompareResult({ documentId }) {
               </Button>
             </div>
           ) : null}
-          <Button variant="outline" size="sm" onClick={() => setModalOpen(true)}>
+          <Button variant="outline" onClick={() => setModalOpen(true)}>
             다른 버전 선택
           </Button>
         </div>
@@ -173,8 +180,8 @@ function CompareResult({ documentId }) {
           <p className="rounded-3xl bg-white p-8 text-center text-body text-muted">두 버전의 내용이 같습니다</p>
         ) : (
           <DiffViewer
-            fromLabel={`v${result.fromVersionNo} (이전)`}
-            toLabel={`v${result.toVersionNo} (이후)`}
+            fromLabel={`이전 버전 · v${result.fromVersionNo}`}
+            toLabel={`이후 버전 · v${result.toVersionNo}`}
             fromText={result.fromText}
             toText={result.toText}
             diffJson={blocks}

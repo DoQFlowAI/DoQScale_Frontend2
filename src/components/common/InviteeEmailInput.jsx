@@ -2,6 +2,7 @@
 import { useId, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from './Button';
+import Icon from './Icon';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
 import { getErrorMessage } from '../../utils/errors';
@@ -122,7 +123,8 @@ export default function InviteeEmailInput({
                 onClick={() => remove(i.email)}
                 disabled={disabled}
               >
-                제거
+                {/* Figma: 글자 대신 [X] 아이콘 (이름은 aria-label 로 그대로 읽힘) */}
+                <Icon name="close" />
               </Button>
             </li>
           ))}

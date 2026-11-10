@@ -122,9 +122,10 @@ export default function InvitationMenu({ onAccepted }) {
         <div
           role="region"
           aria-label="받은 초대"
-          className="fixed inset-x-4 top-16 z-40 rounded-3xl bg-white p-4 shadow-modal sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-[400px]"
+          className="fixed inset-x-4 top-16 z-40 rounded-3xl bg-white p-5 shadow-modal sm:inset-x-auto sm:right-4 sm:top-18 sm:w-[400px] md:right-8"
         >
-          <h2 className="mb-2 text-base font-bold text-ink">받은 초대</h2>
+          {/* Figma: 헤더 오른쪽 끝에 맞춰 헤더 바로 아래에 붙는 카드 */}
+          <h2 className="mb-3 text-title font-bold text-ink">받은 초대</h2>
           {loading && items === null ? (
             <LoadingSpinner />
           ) : error && items === null ? (
@@ -136,8 +137,8 @@ export default function InvitationMenu({ onAccepted }) {
               {items.map((item) => {
                 const busy = pendingId === item.invitationId;
                 return (
-                  <li key={item.invitationId} className="rounded-xl border border-line p-3">
-                    <p className="break-words text-sm font-bold text-ink">{item.documentName}</p>
+                  <li key={item.invitationId} className="rounded-xl border border-line p-4">
+                    <p className="break-words text-body font-bold text-ink">{item.documentName}</p>
                     <p className="mt-0.5 text-caption text-muted">
                       초대자 {item.invitedByName} · {formatDate(item.grantedAt)}
                     </p>
