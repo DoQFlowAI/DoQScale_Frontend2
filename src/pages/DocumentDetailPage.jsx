@@ -354,6 +354,7 @@ function DocumentDetail({ documentId }) {
           documentId={Number(documentId)}
           owned={doc.owned}
           uploadedByName={doc.uploadedBy?.name}
+          uploadedByEmail={doc.uploadedBy?.email}
           onClose={() => setPermissionOpen(false)}
         />
       ) : null}
