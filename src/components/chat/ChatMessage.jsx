@@ -2,7 +2,7 @@
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import chatbotIdle from '../../assets/chatbot-no-bubble.png';
-import chatbotTyping from '../../assets/chatbot-typing-0-to-3.gif';
+import chatbotTyping from '../../assets/chatbot-typing-0-1-2-3.gif';
 
 export default function ChatMessage({ role, content, sources = [], masked = false, streaming = false }) {
     const isUser = role === 'user';

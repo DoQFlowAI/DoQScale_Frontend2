@@ -8,6 +8,7 @@ import InvitationMenu from './InvitationMenu';
 import { useAuthStore } from '../../store/authStore';
 import { authService } from '../../services/authService';
 import { expireSession } from '../../services/session';
+import logoImg from '../../assets/rogo 2.png';
 
 export default function Header({ menuOpen = false, onMenuClick, onInvitationAccepted }) {
   const navigate = useNavigate();
@@ -38,8 +39,8 @@ export default function Header({ menuOpen = false, onMenuClick, onInvitationAcce
       >
         <Icon name="menu" />
       </button>
-      <Link to="/" className="min-w-0 truncate text-[length:clamp(14px,calc((100vw_-_280px)/5.5),18px)] font-bold text-white md:text-heading">
-        DoQFlow AI
+      <Link to="/" className="flex shrink-0 items-center">
+        <img src={logoImg} alt="DoQFlow AI" className="h-11 w-auto object-contain" />
       </Link>
       <div className="flex-1" />
       <InvitationMenu onAccepted={onInvitationAccepted} />
