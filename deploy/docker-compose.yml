@@ -1,0 +1,89 @@
+name: doqflow
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  database:
+    image: mariadb:10.11
+    command: 
+      - --character-set-server=utf8mb4 
+      - --collation-server=utf8mb4_unicode_ci 
+    environment:
+      MARIADB_ROOT_HOST: localhost
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: doqflow
+      DB_APP_USER: ${DB_APP_USER}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD}
+      DB_MIGRATE_USER: ${DB_MIGRATE_USER}
+      DB_MIGRATE_PASSWORD: ${DB_MIGRATE_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    logging: *logging
+
+  ai-module:
+    image: ghcr.io/${IMAGE_OWNER}/doqflow-ai:${AI_TAG:-latest}
+    build: ../../DoQScale_LLM2/ai
+    environment:
+      AI_INTERNAL_KEY: ${AI_INTERNAL_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      EMBEDDING_MODEL: text-embedding-3-small
+    volumes:
+      - faiss-data:/app/faiss
+      - type: volume
+        source: upload-data
+        target: /app/uploads
+        read_only: true
+        volume:
+          nocopy: true
+    expose: ["8000"]
+    restart: unless-stopped
+    logging: *logging
+
+  backend:
+    image: ghcr.io/${IMAGE_OWNER}/doqflow-backend:${BACKEND_TAG:-latest}
+    build: ../../DoQScale_Backend
+    environment:
+      DB_URL: jdbc:mariadb://database:3306/doqflow
+      DB_USER: ${DB_APP_USER}
+      DB_PASSWORD: ${DB_APP_PASSWORD}
+      FLYWAY_USER: ${DB_MIGRATE_USER}
+      FLYWAY_PASSWORD: ${DB_MIGRATE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      AI_BASE_URL: http://ai-module:8000
+      AI_INTERNAL_KEY: ${AI_INTERNAL_KEY}
+      UPLOAD_DIR: /app/uploads
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      SIGNUP_KEY_LEAD: ${SIGNUP_KEY_LEAD}
+      ACTUATOR_EXPOSURE: health,info
+    volumes:
+      - upload-data:/app/uploads
+    expose: ["8080"]
+    mem_limit: 1536m
+    depends_on:
+      database: { condition: service_healthy }
+    restart: unless-stopped
+    logging: *logging
+
+  frontend:
+    image: ghcr.io/${IMAGE_OWNER}/doqflow-frontend:${FRONTEND_TAG:-latest}
+    build: ..
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    logging: *logging
+  
+volumes:
+  db-data:
+  upload-data:
+  faiss-data:

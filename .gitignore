@@ -16,3 +16,6 @@ src/preview/LocalPreview.jsx
 .idea/
 .DS_Store
 Thumbs.db
+
+tags.env
+backup*.sql
