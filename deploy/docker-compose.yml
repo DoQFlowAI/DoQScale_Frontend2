@@ -39,7 +39,12 @@ services:
       EMBEDDING_MODEL: text-embedding-3-small
     volumes:
       - faiss-data:/app/faiss
-      - upload-data:/app/uploads:ro
+      - type: volume
+        source: upload-data
+        target: /app/uploads
+        read_only: true
+        volume:
+          nocopy: true
     expose: ["8000"]
     restart: unless-stopped
     logging: *logging
@@ -63,6 +68,7 @@ services:
     volumes:
       - upload-data:/app/uploads
     expose: ["8080"]
+    mem_limit: 1536m
     depends_on:
       database: { condition: service_healthy }
     restart: unless-stopped
