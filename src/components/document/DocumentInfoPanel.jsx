@@ -17,7 +17,7 @@ const DESCRIPTION_MAX = 500;
  * 바뀐 필드만 onSave(patch)로 보냅니다. 바뀐 것이 없으면 요청 없이 닫습니다.
  * 실제 API 호출과 다시 조회는 페이지가 하고, 여기서는 결과(성공·실패)만 받습니다.
  *
- * @param doc GET /documents/{id} 응답 ({ name, description, status, currentVersionNo, uploadedByName, owned })
+ * @param doc GET /documents/{id} 응답 ({ name, description, status, currentVersionNo, uploadedBy{name, email, rankLevel}, owned })
  * @param onSave (patch) => Promise. 실패하면 throw 해서 이 패널이 오류 문구를 보여 줍니다
  * @param onDelete 삭제 확인창을 여는 일은 페이지가 합니다
  * @param actions 제목 줄 오른쪽에 둘 버튼들 (페이지가 넣음)
@@ -161,7 +161,7 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge status={doc.status} />
             {doc.currentVersionNo > 0 ? <Chip tone="soft">현재 v{doc.currentVersionNo}</Chip> : null}
-            {doc.uploadedByName ? <span className="text-caption text-muted">등록자 {doc.uploadedByName}</span> : null}
+            {doc.uploadedBy?.name ? <span className="text-caption text-muted">등록자 {doc.uploadedBy.name}</span> : null}
           </div>
         </div>
         {actionRow}
@@ -179,7 +179,7 @@ DocumentInfoPanel.propTypes = {
     description: PropTypes.string,
     status: PropTypes.string.isRequired,
     currentVersionNo: PropTypes.number,
-    uploadedByName: PropTypes.string,
+    uploadedBy: PropTypes.shape({ name: PropTypes.string, email: PropTypes.string, rankLevel: PropTypes.number }),
     owned: PropTypes.bool,
   }).isRequired,
   onSave: PropTypes.func.isRequired,

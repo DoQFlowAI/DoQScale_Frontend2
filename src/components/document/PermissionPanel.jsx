@@ -57,9 +57,9 @@ PersonRow.propTypes = {
 
 /**
  * 열람자 목록·초대·회수 모달 (명세 4.4 문서 상세).
- * 약속 props: documentId(필수), owned(필수), uploadedByName, onClose(필수)
+ * 약속 props: documentId(필수), owned(필수), uploadedByName, uploadedByEmail, onClose(필수)
  */
-export default function PermissionPanel({ documentId, owned, uploadedByName = '', onClose }) {
+export default function PermissionPanel({ documentId, owned, uploadedByName = '', uploadedByEmail = '', onClose }) {
   const [list, setList] = useState(null);
   const [error, setError] = useState('');
   const [invitees, setInvitees] = useState([]);
@@ -123,8 +123,7 @@ export default function PermissionPanel({ documentId, owned, uploadedByName = ''
 
   // 대기·수락 중인 사람은 다시 초대하지 않음 (거절한 사람은 다시 초대하면 대기로 돌아감)
   const excludeEmails = (list || []).filter((p) => p.status !== 'REJECTED').map((p) => p.email);
-  const accepted = (list || []).filter((p) => p.status === 'ACCEPTED');
-  const visible = owned ? list || [] : accepted;
+  const visible = list || [];
 
   return (
     <>
@@ -138,7 +137,7 @@ export default function PermissionPanel({ documentId, owned, uploadedByName = ''
           <div className="flex flex-col gap-1.5">
             <h3 className="text-label font-medium text-ink-2">책임자</h3>
             <ul>
-              <PersonRow name={uploadedByName || '-'}>
+              <PersonRow name={uploadedByName || '-'} email={uploadedByEmail}>
                 <Chip tone="green">등록자</Chip>
               </PersonRow>
             </ul>
@@ -187,13 +186,13 @@ export default function PermissionPanel({ documentId, owned, uploadedByName = ''
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {visible.map((p) => {
+              {visible.map((p, index) => {
                 const dateText = owned
                   ? `${p.respondedAt ? '응답' : '초대'} ${formatDate(p.respondedAt || p.grantedAt)}`
                   : undefined;
                 return (
                   <PersonRow
-                    key={p.permissionId ?? p.uuid}
+                    key={p.permissionId ?? p.uuid ?? index}
                     name={p.name}
                     email={p.email}
                     rankLevel={p.rankLevel}
@@ -236,5 +235,6 @@ PermissionPanel.propTypes = {
   documentId: PropTypes.number.isRequired,
   owned: PropTypes.bool.isRequired,
   uploadedByName: PropTypes.string,
+  uploadedByEmail: PropTypes.string,
   onClose: PropTypes.func.isRequired,
 };
