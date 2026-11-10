@@ -8,6 +8,20 @@ export default function ChatWidget() {
     const [open, setOpen] = useState(false);
     const panelRef = useRef(null);
     const buttonRef = useRef(null);
+    const wasOpenRef = useRef(false);
+
+    // 패널이 닫힌 뒤에 포커스를 아이콘으로 돌려줍니다 (명세 5.2). 모바일은 패널이 열려 있는 동안 아이콘이 숨겨져 있어서
+    // 닫는 순간에 focus() 를 부르면 아직 보이지 않는 요소라 실패하므로, 아이콘이 다시 그려진 다음에 부릅니다
+    useEffect(() => {
+        if (open) {
+            wasOpenRef.current = true;
+            return;
+        }
+        if (wasOpenRef.current) {
+            wasOpenRef.current = false;
+            buttonRef.current?.focus();
+        }
+    }, [open]);
 
     function close() {
         setOpen(false);
