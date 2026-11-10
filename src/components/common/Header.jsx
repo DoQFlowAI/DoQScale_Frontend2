@@ -8,6 +8,8 @@ import InvitationMenu from './InvitationMenu';
 import { useAuthStore } from '../../store/authStore';
 import { authService } from '../../services/authService';
 import { expireSession } from '../../services/session';
+import logoFull from '../../assets/logo.png';
+import logoMark from '../../assets/logo-mark.png';
 
 export default function Header({ menuOpen = false, onMenuClick, onInvitationAccepted }) {
   const navigate = useNavigate();
@@ -38,8 +40,12 @@ export default function Header({ menuOpen = false, onMenuClick, onInvitationAcce
       >
         <Icon name="menu" />
       </button>
-      <Link to="/" className="min-w-0 truncate py-3 text-[length:clamp(14px,calc((100vw_-_280px)/5.5),18px)] font-bold text-white md:py-0 md:text-heading">
-        DoQFlow AI
+      {/* 로고: 좁은 화면(640px 미만)은 아이콘만, 그보다 넓으면 글자까지 있는 전체 로고. 접근성 이름은 항상 "DoQFlow AI" */}
+      <Link to="/" className="flex shrink-0 items-center py-1">
+        <picture>
+          <source media="(min-width: 640px)" srcSet={logoFull} />
+          <img src={logoMark} alt="DoQFlow AI" className="h-10 w-auto" />
+        </picture>
       </Link>
       <div className="flex-1" />
       <InvitationMenu onAccepted={onInvitationAccepted} />

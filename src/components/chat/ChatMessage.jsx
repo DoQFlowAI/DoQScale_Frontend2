@@ -1,6 +1,8 @@
 // 소유: WJH
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import chatbotIdle from '../../assets/chatbot.png';
+import chatbotTyping from '../../assets/chatbot-typing.gif';
 
 export default function ChatMessage({ role, content, sources = [], masked = false, streaming = false }) {
     const isUser = role === 'user';
@@ -21,8 +23,16 @@ export default function ChatMessage({ role, content, sources = [], masked = fals
     else if (waiting) tone = 'bg-th text-muted';
 
     return (
-        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-3xl px-4 py-3 text-body whitespace-pre-wrap break-words ${tone}`}>
+        <div className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+            {/* 답변 쪽에는 캐릭터를 붙이고, 답변을 기다리는 동안에는 말풍선이 깜빡이는 움직이는 그림을 보여줍니다 */}
+            {!isUser && (
+                <img
+                    src={streaming ? chatbotTyping : chatbotIdle}
+                    alt={streaming ? '챗봇 답변 중' : '챗봇'}
+                    className="h-16 w-16 shrink-0 object-contain md:h-22 md:w-22"
+                />
+            )}
+            <div className={`min-w-0 max-w-[85%] rounded-3xl px-4 py-3 text-body whitespace-pre-wrap break-words ${isUser ? '' : 'mb-5 '}${tone}`}>
                 <p>{body}</p>
 
                 {!masked && sources.length > 0 && (
