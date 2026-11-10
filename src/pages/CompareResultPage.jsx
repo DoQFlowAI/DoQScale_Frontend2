@@ -42,7 +42,7 @@ function CompareResult({ documentId }) {
   const [failure, setFailure] = useState(null); // 화면 전체 오류 (404·서버 오류)
   const [compareError, setCompareError] = useState(''); // 비교 요청 400의 서버 문구
   const [modalOpen, setModalOpen] = useState(false);
-  const [activeBlock, setActiveBlock] = useState(null);
+  const [activeBlock, setActiveBlock] = useState(0);
   const [scrollKey, setScrollKey] = useState(0);
   const seq = useRef(0); // 주소가 바뀌어 늦게 온 이전 응답이 화면을 덮지 않게
 
@@ -57,7 +57,7 @@ function CompareResult({ documentId }) {
     setFailure(null);
     setCompareError('');
     setResult(null);
-    setActiveBlock(null);
+    setActiveBlock(0);
     // 문서(이름·버전 목록)와 비교 결과를 함께 받습니다. 쿼리가 잘못됐으면 문서만 받습니다
     const [docRes, cmpRes] = await Promise.allSettled([
       documentService.get(documentId),
