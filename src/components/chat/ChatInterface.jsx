@@ -135,7 +135,7 @@ export default function ChatInterface({ active = true }) {
 
     return (
         <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div ref={listRef} role="log" aria-live="polite" className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+            <div ref={listRef} role="log" aria-live="polite" className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2">
                 {messages.length === 0 ? (
                     <p className="m-auto text-body text-muted">문서에 대해 질문해 보세요</p>
                 ) : (
