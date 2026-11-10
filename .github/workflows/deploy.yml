@@ -45,8 +45,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/doqscale/doqflow-frontend:${{ github.sha }}
-            ghcr.io/doqscale/doqflow-frontend:latest
+            ghcr.io/doqflowai/doqflow-frontend:${{ github.sha }}
+            ghcr.io/doqflowai/doqflow-frontend:latest
 
   deploy:
     needs: build
@@ -73,7 +73,7 @@ jobs:
         run: |
           umask 077
           cat > .env <<EOF
-          IMAGE_OWNER=doqscale
+          IMAGE_OWNER=doqflowai
           DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
           DB_APP_USER=${{ vars.DB_APP_USER }}
           DB_APP_PASSWORD=${DB_APP_PASSWORD}
