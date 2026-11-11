@@ -13,7 +13,7 @@ data:
   DB_URL: "jdbc:mariadb://database:3306/doqflow"
   AI_BASE_URL: "http://ai-module:8000"
   UPLOAD_DIR: "/app/uploads"
-  CORS_ORIGINS: "http://127.0.0.1"
+  CORS_ORIGINS: "http://34.64.162.43"
   ACTUATOR_EXPOSURE: "health,info"
   REFRESH_COOKIE_SECURE: "false"
   # ai-module
