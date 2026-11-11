@@ -354,41 +354,6 @@ function parseJson(buf) {
   }
 }
 
-function parseMultipartFiles(raw, contentType) {
-  if (!contentType || !raw || raw.length === 0) return [];
-  const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
-  if (!boundaryMatch) return [];
-  const boundary = boundaryMatch[1] || boundaryMatch[2].trim();
-  const delimiter = Buffer.from(`--${boundary}`);
-  const files = [];
-
-  let start = 0;
-  while ((start = raw.indexOf(delimiter, start)) !== -1) {
-    start += delimiter.length;
-    if (raw.slice(start, start + 2).toString() === '--') break;
-    if (raw.slice(start, start + 2).toString() === '\r\n') start += 2;
-
-    const nextBoundary = raw.indexOf(delimiter, start);
-    if (nextBoundary === -1) break;
-
-    const part = raw.slice(start, nextBoundary - 2);
-    start = nextBoundary;
-
-    const headerEnd = part.indexOf(Buffer.from('\r\n\r\n'));
-    if (headerEnd === -1) continue;
-
-    const headerText = part.slice(0, headerEnd).toString('utf8');
-    const filenameMatch = headerText.match(/filename="([^"]*)"/i);
-    if (!filenameMatch || !filenameMatch[1]) continue;
-
-    const filename = filenameMatch[1];
-    const bodyBuffer = part.slice(headerEnd + 4);
-    const content = bodyBuffer.toString('utf8');
-    files.push({ filename, content });
-  }
-  return files;
-}
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordOk = (p) =>
   typeof p === 'string' && p.length >= 8 && p.length <= 64 && [/[A-Za-z]/, /\d/, /[^A-Za-z\d]/].filter((r) => r.test(p)).length >= 2;
@@ -565,26 +530,16 @@ async function handle(req, res) {
   // --- 버전 (API-V) ---
   if (sub === '/versions' && method === 'POST') {
     if (!owner) return forbidden();
-    // multipart 본문에서 파일 이름 및 본문 꺼내기
-    const contentType = req.headers['content-type'] || '';
-    const uploadedFiles = parseMultipartFiles(raw, contentType);
-    const names =
-      uploadedFiles.length > 0
-        ? uploadedFiles.map((x) => x.filename)
-        : [...raw.toString('latin1').matchAll(/filename="([^"]*)"/g)].map((x) => Buffer.from(x[1], 'latin1').toString('utf8'));
+    // multipart 본문에서 파일 이름만 꺼냅니다. 이름에 dup 이 들어가면 "직전 버전과 같은 내용" 으로 거부
+    const names = [...raw.toString('latin1').matchAll(/filename="([^"]*)"/g)].map((x) => Buffer.from(x[1], 'latin1').toString('utf8'));
     if (names.length < 1 || names.length > 10) return invalid('파일은 한 번에 1~10개까지 올릴 수 있습니다');
     if (names.some((n) => !(/\.(pdf|docx)$/i.test(n) || TEXT_EXT.test(n)) || /[\\/]/.test(n))) return invalid('지원하지 않는 파일 형식입니다');
     if (names.some((n) => /dup/i.test(n))) return invalid('직전 버전과 내용이 같은 파일입니다');
-    const created = names.map((n, idx) => {
+    const created = names.map((n) => {
       const no = currentNo(doc) + 1;
       const prev = doc.versions.at(-1)?.text ?? text(1);
       const status = TEXT_EXT.test(n) ? 'READY' : 'PROCESSING';
-      const parsedContent = uploadedFiles[idx]?.content;
-      const fileText =
-        TEXT_EXT.test(n) && parsedContent && parsedContent.trim()
-          ? parsedContent
-          : `${prev}\nv${no} 에서 추가된 문장이다.`;
-      doc.versions.push({ ...ver(no, n, fileText, status, 0), uploadedBy: me.uuid });
+      doc.versions.push({ ...ver(no, n, `${prev}\nv${no} 에서 추가된 문장이다.`, status, 0), uploadedBy: me.uuid });
       return { versionNo: no, status };
     });
     doc.updatedAt = now();

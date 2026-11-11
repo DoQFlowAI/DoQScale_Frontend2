@@ -8,10 +8,19 @@ import PropTypes from 'prop-types';
 function renderInline(text, keyPrefix = 'inline') {
   if (!text) return null;
 
+  // 정규식 매칭: code, link, bold, italic, del
+  // 1: `code`
+  // 2, 3: [linkText](url)
+  // 4: **bold** or __bold__
+  // 5: *italic* or _italic_
+  // 6: ~~del~~
+  const tokenRegex = /(`([^`]+)`) blueprint|(\[([^\]]+)\]\(([^)]+)\))|(\*\*([^*]+)\*\*|__([^_]+)__/g;
+  // 더 안전하고 정밀하게 순차 파서 작성
   const elements = [];
+  let remaining = text;
   let idx = 0;
 
-  // 인라인 종합 정규식: code, link, bold, del, italic
+  // 종합 정규식
   const inlineRegex =
     /(`(?<inlineCode>[^`]+)`)|(\[(?<linkText>[^\]]+)\]\((?<linkUrl>[^)]+)\))|(\*\*(?<boldText>[^*]+)\*\*|__(?<boldTextAlt>[^_]+)__)|(~~(?<delText>[^~]+)~~)|(\*(?<italicText>[^*]+)\*|_(?<italicTextAlt>[^_]+)_)/g;
 
