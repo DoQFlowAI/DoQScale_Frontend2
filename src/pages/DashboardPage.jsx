@@ -18,7 +18,8 @@ const EXAMPLE_QUESTIONS_TOP = [
 const EXAMPLE_QUESTION_BOTTOM = '외부 반출이 금지된 자료는 뭐야?';
 
 export default function DashboardPage() {
-  const { documents = [], loadingDocuments = false, openCreateModal } = useOutletContext() ?? {};
+  const { documents = [], loadingDocuments = false, documentsLoading = false, openCreateModal } = useOutletContext() ?? {};
+  const isDocLoading = loadingDocuments || documentsLoading;
   const navigate = useNavigate();
   const [inviteGuideOpen, setInviteGuideOpen] = useState(false);
 
@@ -37,7 +38,7 @@ export default function DashboardPage() {
     useChatStore.getState().setPendingQuestion(`${doc.name} 최신 버전에서 변경된 내용을 알려줘`);
   };
 
-  if (loadingDocuments && documents.length === 0) {
+  if (isDocLoading && documents.length === 0) {
     return (
       <div className="flex h-full min-h-0 items-center justify-center">
         <LoadingSpinner />

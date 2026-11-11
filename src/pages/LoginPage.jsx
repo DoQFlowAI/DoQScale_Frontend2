@@ -48,11 +48,11 @@ export default function LoginPage() {
     setError('');
     setPending(true);
     try {
-      const { accessToken, refreshToken } = await authService.login(trimmedEmail, password);
-      useAuthStore.getState().setTokens(accessToken, refreshToken); // /users/me 요청에 토큰을 싣기 위해 먼저 저장
+      const { accessToken } = await authService.login(trimmedEmail, password);
+      useAuthStore.getState().setTokens(accessToken); // /users/me 요청에 토큰을 싣기 위해 먼저 저장
       const me = await userService.me();
       useChatStore.getState().clear(); // 이전 사용자의 대화가 남지 않게
-      useAuthStore.getState().login(me, accessToken, refreshToken); // → PublicOnlyRoute 가 원래 화면으로 보냄
+      useAuthStore.getState().login(me, accessToken); // → PublicOnlyRoute 가 원래 화면으로 보냄
     } catch (err) {
       useAuthStore.getState().logout();
       setError(getErrorMessage(err));

@@ -44,6 +44,7 @@ export default function Layout() {
             context={{
               refreshDocuments,
               documents: list.documents,
+              documentsLoading: list.loading,
               loadingDocuments: list.loading,
               openCreateModal: () => setCreateOpen(true),
             }}

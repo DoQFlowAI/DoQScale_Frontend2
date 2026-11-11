@@ -5,8 +5,19 @@ import Button from '../common/Button';
 
 const MAX_INPUT_LENGTH = 1000;
 
-export default function ChatInput({ onSend, disabled = false, showCount = true, placeholder = '질문을 입력하세요' }) {
-    const [question, setQuestion] = useState('');
+/** 입력값은 ChatInterface 가 들고 있습니다 (첫 화면 예시 질문을 눌러 채우기 위해) */
+export default function ChatInput({
+    value: controlledValue,
+    onChange: setControlledValue,
+    onSend,
+    disabled = false,
+    showCount = true,
+    placeholder = '질문을 입력하세요',
+}) {
+    const [internalValue, setInternalValue] = useState('');
+    const isControlled = controlledValue !== undefined;
+    const question = isControlled ? controlledValue : internalValue;
+    const setQuestion = isControlled ? setControlledValue : setInternalValue;
     const trimmed = question.trim();
     const canSend = !disabled && trimmed.length > 0;
 
@@ -57,6 +68,8 @@ export default function ChatInput({ onSend, disabled = false, showCount = true, 
 }
 
 ChatInput.propTypes = {
+    value: PropTypes.string,
+    onChange: PropTypes.func,
     onSend: PropTypes.func.isRequired,
     disabled: PropTypes.bool,
     showCount: PropTypes.bool,

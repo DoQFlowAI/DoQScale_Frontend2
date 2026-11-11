@@ -20,20 +20,14 @@ let refreshing = null;
 export function refreshAccessToken() {
   if (refreshing) return refreshing;
 
-  const { refreshToken } = useAuthStore.getState();
-  if (!refreshToken) {
-    expireSession();
-    return Promise.reject(new ApiError({ status: 401 }));
-  }
-
   refreshing = refreshClient
-    .post('/auth/refresh', { refreshToken })
+    .post('/auth/refresh')
     .then((res) => {
       const data = unwrap(res.data);
-      if (!data?.accessToken || !data?.refreshToken) {
+      if (!data?.accessToken) {
         throw new ApiError({ status: 401 });
       }
-      useAuthStore.getState().setTokens(data.accessToken, data.refreshToken);
+      useAuthStore.getState().setTokens(data.accessToken);
       return data.accessToken;
     })
     .catch((err) => {

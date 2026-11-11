@@ -38,8 +38,10 @@ export default function ChatInterface({
     active = true,
     compact = false,
     emptySlot = null,
+    renderEmpty = null,
     inputDisabled = false,
     placeholder = '질문을 입력하세요',
+    inputPlaceholder,
 }) {
     const sessionId = useChatStore((s) => s.sessionId);
     const messages = useChatStore((s) => s.messages);
@@ -49,6 +51,7 @@ export default function ChatInterface({
     const { start } = useStreamingText();
     const [error, setError] = useState('');
     const [rateLimited, setRateLimited] = useState(false);
+    const [draft, setDraft] = useState('');
     const listRef = useRef(null);
 
     useEffect(() => {
@@ -151,7 +154,13 @@ export default function ChatInterface({
         <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div ref={listRef} role="log" aria-live="polite" className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2">
                 {messages.length === 0 ? (
-                    emptySlot || <p className="m-auto text-body text-muted">문서에 대해 질문해 보세요</p>
+                    renderEmpty ? (
+                        renderEmpty(setDraft)
+                    ) : emptySlot ? (
+                        emptySlot
+                    ) : (
+                        <p className="m-auto text-body text-muted">문서에 대해 질문해 보세요</p>
+                    )
                 ) : (
                     messages.map((m) => (
                         <ChatMessage
@@ -169,10 +178,12 @@ export default function ChatInterface({
             {error && <p role="alert" className="rounded-xl bg-danger-bg px-4 py-3 text-label text-danger">{error}</p>}
 
             <ChatInput
+                value={draft}
+                onChange={setDraft}
                 onSend={handleSend}
-                disabled={isLoading || rateLimited || inputDisabled}
+                disabled={inputDisabled || isLoading || rateLimited}
                 showCount={!compact}
-                placeholder={placeholder}
+                placeholder={inputPlaceholder || placeholder}
             />
         </div>
     );
@@ -182,6 +193,8 @@ ChatInterface.propTypes = {
     active: PropTypes.bool,
     compact: PropTypes.bool, // 챗봇 패널처럼 좁은 곳: 입력창 글자 수 표시를 숨김
     emptySlot: PropTypes.node,
+    renderEmpty: PropTypes.func, // 대화가 없을 때 보여 줄 화면. (setDraft) => node, 입력창을 채울 함수를 받음
     inputDisabled: PropTypes.bool,
     placeholder: PropTypes.string,
+    inputPlaceholder: PropTypes.string,
 };
