@@ -26,6 +26,7 @@ spec:
       labels:
         app: database
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: database
           image: mariadb:10.11

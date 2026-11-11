@@ -26,6 +26,7 @@ spec:
       labels:
         app: backend
     spec:
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: ghcr-pull
       securityContext:
@@ -33,6 +34,7 @@ spec:
         runAsUser: 10001
         fsGroup: 10001
         fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: backend
           image: ghcr.io/doqflowai/doqflow-backend:57614c69883967f3afb7199df2eef370c44da272
@@ -67,6 +69,7 @@ spec:
               valueFrom: { configMapKeyRef: { name: doqflow-config, key: REFRESH_COOKIE_SECURE } }
           securityContext:
             allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
           volumeMounts:
             - name: upload-data
               mountPath: /app/uploads
