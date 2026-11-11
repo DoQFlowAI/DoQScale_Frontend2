@@ -83,6 +83,9 @@ jobs:
           SIGNUP_KEY_LEAD=${SIGNUP_KEY_LEAD}
           AI_INTERNAL_KEY=${AI_INTERNAL_KEY}
           OPENAI_API_KEY=${OPENAI_API_KEY}
+          NGINX_TEMPLATE=${{ vars.NGINX_TEMPLATE }}
+          SERVER_NAME=${{ vars.SERVER_NAME }}
+          CERT_DIR=/etc/letsencrypt
           EOF
 
       - uses: docker/login-action@v3
@@ -108,6 +111,12 @@ jobs:
           docker image prune -f
 
       - name: Smoke test
+        env:
+          NGINX_TEMPLATE: ${{ vars.NGINX_TEMPLATE }}
+          SERVER_NAME: ${{ vars.SERVER_NAME }}
         run: |
           sleep 10
-          curl -fsS http://localhost/ >/dev/null
+          curl -fsS -o /dev/null http://localhost/
+          if [ "$NGINX_TEMPLATE" = "https" ]; then
+            curl -fsS -o /dev/null --resolve "$SERVER_NAME:443:127.0.0.1" "https://$SERVER_NAME/"
+          fi

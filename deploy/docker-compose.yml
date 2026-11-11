@@ -7,9 +7,9 @@ x-logging: &logging
 services:
   database:
     image: mariadb:10.11
-    command: 
-      - --character-set-server=utf8mb4 
-      - --collation-server=utf8mb4_unicode_ci 
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
     environment:
       MARIADB_ROOT_HOST: localhost
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
@@ -77,12 +77,17 @@ services:
   frontend:
     image: ghcr.io/${IMAGE_OWNER}/doqflow-frontend:${FRONTEND_TAG:-latest}
     build: ..
+    environment:
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/templates/${NGINX_TEMPLATE:-http}
+      SERVER_NAME: ${SERVER_NAME:-}
+    volumes:
+      - ${CERT_DIR:-./certs}:/etc/letsencrypt:ro
     ports:
       - "80:80"
       - "443:443"
     restart: unless-stopped
     logging: *logging
-  
+
 volumes:
   db-data:
   upload-data:
