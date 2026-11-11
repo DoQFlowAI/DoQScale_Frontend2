@@ -102,6 +102,13 @@ function issueTokens(user) {
   return { accessToken, refreshToken };
 }
 
+const REFRESH_COOKIE = 'refresh_token';
+const refreshCookie = (value, maxAge) =>
+  `${REFRESH_COOKIE}=${value}; HttpOnly; Secure; SameSite=Strict; Path=/api/auth; Max-Age=${maxAge}`;
+const readRefreshCookie = (req) =>
+  (req.headers.cookie ?? '').split(';').map((c) => c.trim().split('='))
+    .find(([k]) => k === REFRESH_COOKIE)?.[1];
+
 function overLimit(uuid, kind, perMinute) {
   const key = `${uuid}:${kind}`;
   const list = (hits.get(key) ?? []).filter((t) => Date.now() - t < 60000);
@@ -264,18 +271,29 @@ async function handle(req, res) {
       return fail(401, 'INVALID_CREDENTIALS', '이메일 또는 비밀번호가 올바르지 않습니다');
     }
     user.failed = 0;
-    return ok({ ...issueTokens(user), name: user.name, rankLevel: user.rankLevel });
+    const { accessToken, refreshToken } = issueTokens(user);
+    return {
+      ...ok({ accessToken, name: user.name, rankLevel: user.rankLevel }),
+      headers: { 'Set-Cookie': refreshCookie(refreshToken, 1209600) },
+    };
   }
   if (method === 'POST' && path === '/auth/refresh') {
-    const r = refreshTokens.get(body.refreshToken);
+    const r = refreshTokens.get(readRefreshCookie(req));
     if (!r) return fail(401, 'UNAUTHORIZED', '다시 로그인해 주세요');
     if (r.revoked) {
+      if (Date.now() - r.revokedAt < 30000) return fail(401, 'UNAUTHORIZED', '다시 로그인해 주세요');
       // 폐기된 토큰을 다시 쓰면 그 사용자의 토큰을 전부 폐기 (API-A-3)
       for (const t of refreshTokens.values()) if (t.uuid === r.uuid) t.revoked = true;
       return fail(401, 'UNAUTHORIZED', '다시 로그인해 주세요');
     }
-    r.revoked = true;
-    return ok(issueTokens(byUuid(r.uuid)));
+
+    Object.assign(r, { revoked: true, revokedAt: Date.now() });
+    const user = byUuid(r.uuid);
+    const { accessToken, refreshToken } = issueTokens(user);
+    return {
+      ...ok({ accessToken, name: user.name, rankLevel: user.rankLevel }),
+      headers: { 'Set-Cookie': refreshCookie(refreshToken, 1209600) },
+    };
   }
 
   // 이 아래는 로그인 필요
@@ -286,9 +304,9 @@ async function handle(req, res) {
 
   if (method === 'POST' && path === '/auth/logout') {
     accessTokens.delete(token);
-    const r = refreshTokens.get(body.refreshToken);
+    const r = refreshTokens.get(readRefreshCookie(req));
     if (r) r.revoked = true;
-    return ok(null);
+    return { ...ok(null), headers: { 'Set-Cookie': refreshCookie('', 0) } };
   }
 
   // --- 사용자 ---
@@ -516,7 +534,7 @@ http
       const out = /^\/(chat|ai)\//.test(path) ? await handleChat(req, res, path) : await handle(req, res);
       if (!out) return;
       if (out.status === 204) return res.writeHead(204).end();
-      res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.writeHead(out.status, { 'Content-Type': 'application/json; charset=utf-8', ...out.headers });
       res.end(JSON.stringify(out.body));
     } catch (e) {
       console.error(e);

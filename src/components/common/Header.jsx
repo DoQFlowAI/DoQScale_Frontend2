@@ -20,7 +20,7 @@ export default function Header({ menuOpen = false, onMenuClick, onInvitationAcce
     setLoggingOut(true);
 
     try {
-      await authService.logout(useAuthStore.getState().refreshToken);
+      await authService.logout();
     } catch {
       // 결과와 상관없이 로컬 상태를 비웁니다 (명세 4.4 로그인)
     }
