@@ -29,7 +29,7 @@ export default function Layout() {
       <div className="flex min-h-0 flex-1">
         <Sidebar list={list} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="thin-scroll min-w-0 flex-1 overflow-y-auto">
-          <Outlet context={{ refreshDocuments }} />
+          <Outlet context={{ refreshDocuments, documents: list.documents, documentsLoading: list.loading }} />
         </main>
       </div>
     </div>

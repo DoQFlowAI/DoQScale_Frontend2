@@ -1,12 +1,18 @@
 // 소유: WJH
-import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../common/Button';
 
 const MAX_INPUT_LENGTH = 1000;
 
-export default function ChatInput({ onSend, disabled = false, showCount = true }) {
-    const [question, setQuestion] = useState('');
+/** 입력값은 ChatInterface 가 들고 있습니다 (첫 화면 예시 질문을 눌러 채우기 위해) */
+export default function ChatInput({
+    value: question,
+    onChange: setQuestion,
+    onSend,
+    disabled = false,
+    showCount = true,
+    placeholder = '질문을 입력하세요',
+}) {
     const trimmed = question.trim();
     const canSend = !disabled && trimmed.length > 0;
 
@@ -44,7 +50,7 @@ export default function ChatInput({ onSend, disabled = false, showCount = true }
                     rows={1}
                     disabled={disabled}
                     aria-label="질문"
-                    placeholder="질문을 입력하세요"
+                    placeholder={placeholder}
                     className="field-sizing-content max-h-32 min-h-11 min-w-0 flex-1 md:min-h-6 resize-none bg-transparent py-1 text-body leading-6 text-ink outline-none placeholder:text-placeholder"
                 />
                 {showCount ? (
@@ -57,7 +63,10 @@ export default function ChatInput({ onSend, disabled = false, showCount = true }
 }
 
 ChatInput.propTypes = {
+    value: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
     onSend: PropTypes.func.isRequired,
     disabled: PropTypes.bool,
     showCount: PropTypes.bool,
+    placeholder: PropTypes.string,
 };
