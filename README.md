@@ -39,6 +39,7 @@ npm run build
 |--------|------|-----------------|-----------|
 | `leader@example.com` | 팀장 | 1~4 (등록자), 5 (수락) | 6 |
 | `leader2@example.com` | 팀장 | 5·6 (등록자) | 1 |
+| `leader3@example.com` | 팀장 | 0 | 0 |
 | `member@example.com` | 사원 | 1·5 (수락) | 6 |
 | `member2@example.com` | 사원 | 없음 (1 거절) | 없음 |
 

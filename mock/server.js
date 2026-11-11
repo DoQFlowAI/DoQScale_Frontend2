@@ -15,6 +15,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const users = [
   { uuid: 'u-leader', email: 'leader@example.com', name: '테스트 팀장', rankLevel: 2 },
   { uuid: 'u-leader2', email: 'leader2@example.com', name: '테스트 팀장2', rankLevel: 2 },
+  { uuid: 'u-leader3', email: 'leader3@example.com', name: '테스트 팀장3', rankLevel: 2 },
   { uuid: 'u-member', email: 'member@example.com', name: '테스트 사원', rankLevel: 1 },
   { uuid: 'u-member2', email: 'member2@example.com', name: '테스트 사원2', rankLevel: 1 },
 ].map((u) => ({ ...u, password: 'Passw0rd!', createdAt: daysAgo(30), failed: 0, lockedUntil: 0 }));
@@ -22,12 +23,111 @@ const byUuid = (uuid) => users.find((u) => u.uuid === uuid);
 
 // 문장 단위 줄바꿈 본문 (DB 설계서 4.3)
 const TEXT = {
-  1: ['1. 목적', '배포 절차와 승인 체계를 정의한다.', '승인 요청 후 팀장이 검토한다.', '구버전 스크립트는 수동으로 실행한다.', '2. 배포 창구', '배포 창구는 평일 오후 2시에 연다.', '3. 롤백', '롤백은 당일 안에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
-  2: ['1. 목적', '배포 절차와 승인 체계를 정의한다.', '승인 요청 후 팀장과 부서장이 차례로 검토한다.', '구버전 스크립트는 수동으로 실행한다.', '2. 배포 창구', '배포 창구는 평일 오후 2시에 연다.', '3. 롤백', '롤백은 당일 안에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
-  3: ['1. 목적', '배포 절차와 승인 체계를 정의한다.', '승인 요청 후 팀장과 부서장이 차례로 검토한다.', '2. 배포 창구', '배포 창구는 평일 오후 2시에 연다.', '3. 롤백', '롤백은 배포 후 2시간 안에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
-  4: ['1. 목적', '배포 절차와 승인 체계를 정의한다.', '승인 요청 후 팀장과 부서장이 차례로 검토한다.', '2. 배포 창구', '배포 창구는 평일 오후 2시에 연다.', '배포 전 자동 점검을 통과해야 한다.', '실패 시 알림 채널로 즉시 공유한다.', '3. 롤백', '롤백은 배포 후 2시간 안에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
+  1: ['# 배포 가이드', '', '## 1. 목적', '배포 절차와 **승인 체계**를 정의한다.', '승인 요청 후 팀장이 검토한다.', '구버전 스크립트는 `deploy_legacy.sh`로 수동 실행한다.', '', '## 2. 배포 창구', '배포 창구는 **평일 오후 2시**에 연다.', '', '## 3. 롤백', '롤백은 **당일 안**에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
+  2: ['# 배포 가이드', '', '## 1. 목적', '배포 절차와 **승인 체계**를 정의한다.', '승인 요청 후 **팀장과 부서장**이 차례로 검토한다.', '구버전 스크립트는 `deploy_legacy.sh`로 수동 실행한다.', '', '## 2. 배포 창구', '배포 창구는 **평일 오후 2시**에 연다.', '', '## 3. 롤백', '롤백은 **당일 안**에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
+  3: ['# 배포 가이드', '', '## 1. 목적', '배포 절차와 **승인 체계**를 정의한다.', '승인 요청 후 **팀장과 부서장**이 차례로 검토한다.', '', '## 2. 배포 창구', '배포 창구는 **평일 오후 2시**에 연다.', '', '## 3. 롤백', '롤백은 배포 후 **2시간 안**에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
+  4: ['# 배포 가이드', '', '## 1. 목적', '배포 절차와 **승인 체계**를 정의한다.', '승인 요청 후 **팀장과 부서장**이 차례로 검토한다.', '', '## 2. 배포 창구', '배포 창구는 **평일 오후 2시**에 연다.', '배포 전 자동 점검을 통과해야 한다.', '실패 시 알림 채널로 즉시 공유한다.', '', '## 3. 롤백', '롤백은 배포 후 **2시간 안**에 요청해야 한다.', '롤백 후에는 결과를 공유한다.'],
 };
 const text = (n) => TEXT[n].join('\n');
+
+const MD_CONVENTION_V1 = [
+  '# 프론트엔드 개발 표준 가이드',
+  '',
+  '> 본 가이드는 DoQFlow 프론트엔드 프로젝트의 코드 품질 및 협업 효율을 위해 작성되었습니다.',
+  '',
+  '## 1. 기술 스택',
+  '- **React**: `19.x`',
+  '- **스타일링**: `Tailwind CSS v4`',
+  '- **상태 관리**: `Zustand`',
+  '- **라우팅**: `React Router v7`',
+  '',
+  '## 2. 환경 실행 가이드',
+  '```bash',
+  '# 의존성 설치 및 로컬 개발 서버 실행',
+  'npm install',
+  'npm run dev',
+  '```',
+  '',
+  '## 3. 컴포넌트 작성 규칙',
+  '1. 모든 공통 컴포넌트는 `src/components/common`에 위치합니다.',
+  '2. `PropTypes`를 필수로 정의하여 props 유효성을 검증합니다.',
+  '3. 복잡한 비즈니스 로직은 커스텀 훅으로 분리합니다.',
+  '',
+  '## 4. 코드 리뷰 체크리스트',
+  '| 구분 | 점검 항목 | 필수 여부 |',
+  '| --- | --- | --- |',
+  '| 기본 | ESLint 및 빌드 통과 | 필수 |',
+  '| 접근성 | 키보드 내비게이션 및 aria 속성 | 필수 |',
+  '| 성능 | 불필요한 리렌더링 방지 | 권장 |',
+  '',
+  '---',
+  '문의사항은 **프론트엔드 코어팀**으로 연락 바랍니다.',
+].join('\n');
+
+const MD_CONVENTION_V2 = [
+  '# 프론트엔드 개발 표준 가이드',
+  '',
+  '> 본 가이드는 DoQFlow 프론트엔드 프로젝트의 코드 품질 및 협업 효율을 위해 작성되었습니다.',
+  '',
+  '## 1. 기술 스택',
+  '- **React**: `19.x` (React 19 최신 기능 활용)',
+  '- **스타일링**: `Tailwind CSS v4`',
+  '- **상태 관리**: `Zustand v5`',
+  '- **라우팅**: `React Router v7`',
+  '- **빌드 도구**: `Vite v6`',
+  '',
+  '## 2. 환경 실행 가이드',
+  '```bash',
+  '# 의존성 설치 및 목 서버 동시 실행',
+  'npm install',
+  'npm run mock &',
+  'npm run dev',
+  '```',
+  '',
+  '## 3. 컴포넌트 작성 규칙',
+  '1. 모든 공통 컴포넌트는 `src/components/common`에 위치합니다.',
+  '2. `PropTypes`를 필수로 정의하여 props 유효성을 검증합니다.',
+  '3. 복잡한 비즈니스 로직은 커스텀 훅으로 분리합니다.',
+  '4. 마크다운 본문은 `MarkdownView` 컴포넌트로 렌더링합니다.',
+  '',
+  '## 4. 코드 리뷰 체크리스트',
+  '| 구분 | 점검 항목 | 필수 여부 | 담당 |',
+  '| --- | --- | --- | --- |',
+  '| 기본 | ESLint 및 빌드 통과 | 필수 | 작성자 |',
+  '| 접근성 | 키보드 내비게이션 및 aria 속성 | 필수 | 리뷰어 |',
+  '| 성능 | 불필요한 리렌더링 및 번들 크기 | 권장 | 코어팀 |',
+  '| 보안 | XSS 방지 및 입력값 검증 | 필수 | 보안팀 |',
+  '',
+  '## 5. 배포 절차',
+  '- `develop` 브랜치 PR 머지 시 자동 빌드 배포',
+  '- 릴리즈 태그는 `vX.Y.Z` 형식 준수',
+  '',
+  '---',
+  '문의사항은 **프론트엔드 코어팀**([Slack #fe-core](https://slack.com))으로 연락 바랍니다.',
+].join('\n');
+
+const MD_SECURITY_V1 = [
+  '# 사내 정보보안 및 데이터 관리 지침',
+  '',
+  '> **주의**: 본 문서는 사내 대외비 자료이므로 외부 유출을 엄격히 금지합니다.',
+  '',
+  '## 1. 비밀번호 관리 규정',
+  '- 최소 8자 이상, 영문 대소문자/숫자/특수문자 중 2종류 이상 조합',
+  '- 최근 3회 이내 사용한 비밀번호 재사용 불가',
+  '- 90일 주기로 비밀번호 변경 필수',
+  '',
+  '## 2. 단말기 보안 점검표',
+  '- [x] OS 최신 보안 패치 적용',
+  '- [x] 화면 보호기 암호 설정 (10분 유휴 시 잠금)',
+  '- [ ] 사내 백신 실시간 감시 활성화',
+  '- [ ] 비인가 USB 저장장치 연결 차단',
+  '',
+  '## 3. 사고 발생 시 연락처',
+  '| 담당 | 이름 | 이메일 | 내선번호 |',
+  '| --- | --- | --- | --- |',
+  '| 보안관제 | 보안운영팀 | security@example.com | 1004 |',
+  '| 인프라 | 인프라팀 | infra@example.com | 1005 |',
+].join('\n');
 
 const TEXT_EXT = /\.(txt|md|csv|json|xml|yaml|yml|log)$/i;
 
@@ -40,6 +140,7 @@ const SUMMARY = {
   '1:1': { changeType: 'PROCEDURE', summary: '승인 절차에 부서장 검토 단계가 추가됨' },
   '1:2': { changeType: 'NUMERIC', summary: '롤백 제한 시간이 당일에서 2시간으로 줄어듦' },
   '1:3': 'FAILED',
+  '7:1': { changeType: 'SPECIFICATION', summary: 'React 19/Vite 도입, 코드 리뷰 보안 점검 및 배포 절차 추가' },
 };
 
 let nextDocId = 10;
@@ -47,7 +148,7 @@ let nextPermId = 100;
 const documents = [
   {
     documentId: 1, name: '배포 가이드', description: '서비스 배포 절차와 승인 체계', ownerUuid: 'u-leader', createdAt: daysAgo(10),
-    versions: [1, 2, 3, 4].map((n) => ver(n, `deploy_guide_v${n}.${n === 4 ? 'docx' : 'pdf'}`, text(n), 'READY', 12 - n * 2))
+    versions: [1, 2, 3, 4].map((n) => ver(n, `deploy_guide_v${n}.md`, text(n), 'READY', 12 - n * 2))
   },
   {
     documentId: 2, name: '보안 점검 체크리스트', description: '분기별 보안 점검 항목', ownerUuid: 'u-leader', createdAt: daysAgo(8),
@@ -66,6 +167,19 @@ const documents = [
     documentId: 6, name: '장애 대응 매뉴얼', description: '장애 등급별 대응', ownerUuid: 'u-leader2', createdAt: daysAgo(2),
     versions: [ver(1, 'incident.pdf', text(3), 'READY', 2)]
   },
+  {
+    documentId: 7, name: '프론트엔드 개발 표준 가이드', description: 'DoQFlow 프론트엔드 프로젝트 표준 및 컨벤션', ownerUuid: 'u-leader', createdAt: daysAgo(5),
+    versions: [
+      ver(1, 'fe_convention_v1.md', MD_CONVENTION_V1, 'READY', 5),
+      ver(2, 'fe_convention_v2.md', MD_CONVENTION_V2, 'READY', 1),
+    ]
+  },
+  {
+    documentId: 8, name: '사내 정보보안 및 데이터 관리 지침', description: '사내 정보보안 규정 및 단말기 점검 체크리스트', ownerUuid: 'u-leader', createdAt: daysAgo(4),
+    versions: [
+      ver(1, 'security_policy_v1.md', MD_SECURITY_V1, 'READY', 4),
+    ]
+  },
 ].map((d) => ({ ...d, updatedAt: d.createdAt }));
 
 const perm = (documentId, uuid, status, age) => ({
@@ -75,6 +189,8 @@ const permissions = [
   perm(1, 'u-member', 'ACCEPTED', 9), perm(1, 'u-leader2', 'PENDING', 1), perm(1, 'u-member2', 'REJECTED', 5),
   perm(5, 'u-leader', 'ACCEPTED', 5), perm(5, 'u-member', 'ACCEPTED', 5),
   perm(6, 'u-leader', 'PENDING', 1), perm(6, 'u-member', 'PENDING', 1),
+  perm(7, 'u-member', 'ACCEPTED', 4),
+  perm(8, 'u-member', 'ACCEPTED', 3),
 ];
 
 const accessTokens = new Map(); // token -> { uuid, exp }

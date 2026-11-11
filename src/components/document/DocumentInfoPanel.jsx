@@ -3,6 +3,8 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../common/Button';
 import Card from '../common/Card';
+import Chip from '../common/Chip';
+import Icon from '../common/Icon';
 import StatusBadge from '../common/StatusBadge';
 import { getErrorMessage } from '../../utils/errors';
 
@@ -28,14 +30,6 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
   const [descriptionError, setDescriptionError] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  // "등록자 홍길동 · 현재 v4" (Figma: 설명 아래 작은 글씨 한 줄)
-  const meta = [
-    doc.uploadedBy?.name ? `등록자 ${doc.uploadedBy.name}` : null,
-    doc.currentVersionNo > 0 ? `현재 v${doc.currentVersionNo}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
 
   const startEdit = () => {
     setName(doc.name);
@@ -138,7 +132,6 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
               {descriptionError}
             </p>
           ) : null}
-          {meta ? <p className="text-caption text-muted">{meta}</p> : null}
           {error ? (
             <p role="alert" className="rounded-xl bg-danger-bg px-3 py-2.5 text-label text-danger">
               {error}
@@ -157,26 +150,49 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
             {/* 문서 이름·설명은 사용자가 쓴 글이므로 텍스트로만 그립니다 (명세 9.1) */}
             <h1 className="min-w-0 break-words text-display font-bold text-ink">{doc.name}</h1>
             <StatusBadge status={doc.status} />
-            {doc.owned ? (
-              <Button variant="outline" size="sm" onClick={startEdit}>
-                정보 수정
-              </Button>
+            {doc.currentVersionNo > 0 ? <Chip tone="soft">현재 v{doc.currentVersionNo}</Chip> : null}
+            {doc.uploadedBy?.name ? (
+              <span className="text-caption text-muted">등록자 {doc.uploadedBy.name}</span>
             ) : null}
           </div>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center">
           {actions}
           {doc.owned ? (
-            <Button variant="danger" onClick={onDelete}>
-              문서 삭제
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={startEdit}
+                aria-label="정보 수정"
+                title="정보 수정"
+                className="group shrink-0 !px-1 !py-1 hover:!bg-transparent"
+              >
+                <Icon
+                  name="edit"
+                  className="h-5 w-5 text-muted transition-all duration-150 group-hover:scale-115 group-hover:text-ink-2"
+                />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDelete}
+                aria-label="문서 삭제"
+                title="문서 삭제"
+                className="group shrink-0 !px-1 !py-1 hover:!bg-transparent"
+              >
+                <Icon
+                  name="trash"
+                  className="h-5 w-5 text-[#C27D70] transition-all duration-150 group-hover:scale-115 group-hover:text-[#A85D60]"
+                />
+              </Button>
+            </>
           ) : null}
         </div>
       </div>
       <p className={`whitespace-pre-wrap break-words text-body ${doc.description ? 'text-ink-2' : 'text-muted'}`}>
         {doc.description || '설명이 없습니다'}
       </p>
-      {meta ? <p className="text-caption text-muted">{meta}</p> : null}
     </Card>
   );
 }

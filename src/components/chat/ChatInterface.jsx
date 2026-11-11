@@ -1,6 +1,6 @@
 // 소유: WJH
 import PropTypes from 'prop-types';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useStreamingText } from '../../utils/useStreamingText';
 import { chatService } from '../../services/chatService';
@@ -34,10 +34,19 @@ function endAnswer(answerId) {
     }
 }
 
-export default function ChatInterface({ active = true, compact = false, renderEmpty, inputDisabled = false, inputPlaceholder }) {
+export default function ChatInterface({
+    active = true,
+    compact = false,
+    emptySlot = null,
+    renderEmpty = null,
+    inputDisabled = false,
+    placeholder = '질문을 입력하세요',
+    inputPlaceholder,
+}) {
     const sessionId = useChatStore((s) => s.sessionId);
     const messages = useChatStore((s) => s.messages);
     const isLoading = useChatStore((s) => s.isLoading);
+    const pendingQuestion = useChatStore((s) => s.pendingQuestion);
     const { setSession, setLoading, addMessage, appendToken, setSources, finishMessage } = useChatStore.getState();
     const { start } = useStreamingText();
     const [error, setError] = useState('');
@@ -95,7 +104,7 @@ export default function ChatInterface({ active = true, compact = false, renderEm
         }
     }
 
-    async function handleSend(question) {
+    const handleSend = useCallback(async (question) => {
         setError('');
         addMessage({ id: newLocalId(), role: 'user', content: question });
 
@@ -132,13 +141,26 @@ export default function ChatInterface({ active = true, compact = false, renderEm
                 showError(answerId, e);
             },
         });
-    }
+    }, [sessionId, addMessage, setLoading, setSession, start, appendToken, setSources, finishMessage]);
+
+    useEffect(() => {
+        if (!active || !pendingQuestion || isLoading) return;
+        const q = pendingQuestion;
+        useChatStore.getState().setPendingQuestion(null);
+        handleSend(q);
+    }, [active, pendingQuestion, isLoading, handleSend]);
 
     return (
         <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div ref={listRef} role="log" aria-live="polite" className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2">
                 {messages.length === 0 ? (
-                    renderEmpty ? renderEmpty(setDraft) : <p className="m-auto text-body text-muted">문서에 대해 질문해 보세요</p>
+                    renderEmpty ? (
+                        renderEmpty(setDraft)
+                    ) : emptySlot ? (
+                        emptySlot
+                    ) : (
+                        <p className="m-auto text-body text-muted">문서에 대해 질문해 보세요</p>
+                    )
                 ) : (
                     messages.map((m) => (
                         <ChatMessage
@@ -161,7 +183,7 @@ export default function ChatInterface({ active = true, compact = false, renderEm
                 onSend={handleSend}
                 disabled={inputDisabled || isLoading || rateLimited}
                 showCount={!compact}
-                placeholder={inputPlaceholder}
+                placeholder={inputPlaceholder || placeholder}
             />
         </div>
     );
@@ -170,7 +192,9 @@ export default function ChatInterface({ active = true, compact = false, renderEm
 ChatInterface.propTypes = {
     active: PropTypes.bool,
     compact: PropTypes.bool, // 챗봇 패널처럼 좁은 곳: 입력창 글자 수 표시를 숨김
+    emptySlot: PropTypes.node,
     renderEmpty: PropTypes.func, // 대화가 없을 때 보여 줄 화면. (setDraft) => node, 입력창을 채울 함수를 받음
     inputDisabled: PropTypes.bool,
+    placeholder: PropTypes.string,
     inputPlaceholder: PropTypes.string,
 };

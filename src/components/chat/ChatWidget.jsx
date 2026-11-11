@@ -3,9 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../common/Button';
 import Icon from '../common/Icon';
 import ChatInterface from './ChatInterface';
+import { useChatStore } from '../../store/chatStore';
 
 export default function ChatWidget() {
-    const [open, setOpen] = useState(false);
+    const open = useChatStore((s) => s.widgetOpen);
+    const setOpen = useChatStore((s) => s.setWidgetOpen);
+    const [isMaximized, setIsMaximized] = useState(false);
     const panelRef = useRef(null);
     const buttonRef = useRef(null);
     const wasOpenRef = useRef(false);
@@ -41,23 +44,37 @@ export default function ChatWidget() {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [open]);
+    }, [open, setOpen]);
 
     return (
         <>
-            <div aria-hidden="true" className="h-20" />
-
             <div
                 ref={panelRef}
                 role="dialog"
                 aria-label="챗봇"
-                className={`fixed inset-0 z-40 flex-col overflow-hidden bg-white md:inset-auto md:right-6 md:bottom-24 md:h-140 md:w-95 md:rounded-panel md:shadow-modal ${open ? 'flex' : 'hidden'}`}
+                className={`fixed inset-0 z-40 flex-col overflow-hidden bg-white transition-all duration-200 md:rounded-panel md:shadow-modal ${
+                    isMaximized
+                        ? 'md:top-18 md:bottom-6 md:right-6 md:left-6 lg:left-76 md:h-auto md:w-auto md:rounded-2xl'
+                        : 'md:inset-auto md:right-6 md:bottom-24 md:h-140 md:w-95'
+                } ${open ? 'flex' : 'hidden'}`}
             >
                 <div className="flex items-center justify-between border-b border-line px-5 py-2">
                     <h2 className="text-title font-bold text-ink">챗봇</h2>
-                    <Button variant="ghost" size="sm" onClick={close} aria-label="챗봇 닫기">
-                        <Icon name="close" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsMaximized((v) => !v)}
+                            aria-label={isMaximized ? '원래 크기로 축소' : '화면 키우기'}
+                            title={isMaximized ? '원래 크기로 축소' : '화면 키우기'}
+                            className="!px-1.5 !py-1"
+                        >
+                            <Icon name={isMaximized ? 'restore' : 'square'} className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={close} aria-label="챗봇 닫기" className="!px-1.5 !py-1">
+                            <Icon name="close" className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col p-4">
                     <ChatInterface active={open} compact />
