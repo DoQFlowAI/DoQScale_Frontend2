@@ -61,7 +61,7 @@ function VersionSelectBody({ versions, initialFrom, initialTo, onConfirm, onClos
     <Modal
       open
       title="비교할 버전 선택"
-      subtitle="준비 완료된 버전 중 서로 다른 두 개를 고르세요"
+      subtitle="준비 완료(READY) 버전 중 서로 다른 두 개를 고르세요"
       onClose={onClose}
       width="max-w-[560px]"
       footer={
@@ -82,8 +82,8 @@ function VersionSelectBody({ versions, initialFrom, initialTo, onConfirm, onClos
       ) : null}
       {ready.length > 0 ? (
         <div className="flex flex-col gap-4 sm:flex-row">
-          {column('from', '이전 버전', fromNo, setFrom)}
-          {column('to', '이후 버전', toNo, setTo)}
+          {column('from', '이전 버전 (from)', fromNo, setFrom)}
+          {column('to', '이후 버전 (to)', toNo, setTo)}
         </div>
       ) : null}
       {hint ? (

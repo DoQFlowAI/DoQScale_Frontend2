@@ -42,7 +42,7 @@ export default function DocumentTabList({
               >
                 {({ isActive }) => (
                   <>
-                    <span className={`break-words text-sm text-ink ${isActive ? 'font-bold' : 'font-medium'}`}>
+                    <span className={`break-words text-body text-ink ${isActive ? 'font-bold' : 'font-medium'}`}>
                       {doc.name}
                     </span>
                     <span className="flex flex-wrap items-center gap-1.5">
@@ -50,7 +50,14 @@ export default function DocumentTabList({
                       {doc.currentVersionNo > 0 ? (
                         <span className="text-caption text-muted">v{doc.currentVersionNo}</span>
                       ) : null}
-                      {doc.owned ? <Chip tone="white">내 문서</Chip> : null}
+                      {/* Figma: 보고 있는 문서는 흰 칩, 나머지는 초록 글자 */}
+                      {doc.owned ? (
+                        isActive ? (
+                          <Chip tone="white">내 문서</Chip>
+                        ) : (
+                          <span className="text-caption font-medium text-brand">내 문서</span>
+                        )
+                      ) : null}
                     </span>
                   </>
                 )}

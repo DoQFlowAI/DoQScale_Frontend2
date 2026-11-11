@@ -5,7 +5,7 @@ import Button from '../common/Button';
 
 const MAX_INPUT_LENGTH = 1000;
 
-export default function ChatInput({ onSend, disabled = false }) {
+export default function ChatInput({ onSend, disabled = false, showCount = true }) {
     const [question, setQuestion] = useState('');
     const trimmed = question.trim();
     const canSend = !disabled && trimmed.length > 0;
@@ -29,22 +29,29 @@ export default function ChatInput({ onSend, disabled = false }) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-1">
-            <div className="flex items-end gap-2">
+        <form onSubmit={handleSubmit}>
+            {/* 입력창·글자 수·보내기 버튼을 하나의 둥근 입력 줄로 묶습니다. Enter 전송·Shift+Enter 줄바꿈은 그대로 */}
+            <div
+                className={`flex items-center gap-3 rounded-btn border px-4 py-2 focus-within:border-brand ${
+                    disabled ? 'border-line bg-th' : 'border-line bg-white'
+                }`}
+            >
                 <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     onKeyDown={handleKeyDown}
                     maxLength={MAX_INPUT_LENGTH}
-                    rows={2}
+                    rows={1}
                     disabled={disabled}
                     aria-label="질문"
                     placeholder="질문을 입력하세요"
-                    className="min-w-0 flex-1 resize-none rounded-xl border border-line bg-white px-3.5 py-3 text-body text-ink placeholder:text-placeholder disabled:bg-th"
+                    className="field-sizing-content max-h-32 min-h-11 min-w-0 flex-1 md:min-h-6 resize-none bg-transparent py-1 text-body leading-6 text-ink outline-none placeholder:text-placeholder"
                 />
-                <Button type="submit" disabled={!canSend}>전송</Button>
+                {showCount ? (
+                    <span className="shrink-0 text-caption text-muted">{question.length} / {MAX_INPUT_LENGTH}</span>
+                ) : null}
+                <Button type="submit" size="sm" disabled={!canSend}>보내기</Button>
             </div>
-            <p className="text-right text-caption text-muted">{question.length} / {MAX_INPUT_LENGTH}</p>
         </form>
     );
 }
@@ -52,4 +59,5 @@ export default function ChatInput({ onSend, disabled = false }) {
 ChatInput.propTypes = {
     onSend: PropTypes.func.isRequired,
     disabled: PropTypes.bool,
+    showCount: PropTypes.bool,
 };

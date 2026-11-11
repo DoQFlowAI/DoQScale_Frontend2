@@ -110,7 +110,7 @@ export default function LoginPage() {
         </Button>
         <p className="text-center text-label text-muted">
           계정이 없으신가요?{' '}
-          <Link to="/signup" className="font-bold text-brand hover:underline">
+          <Link to="/signup" className="inline-flex min-h-11 min-w-11 items-center justify-center font-bold text-brand hover:underline">
             회원가입
           </Link>
         </p>

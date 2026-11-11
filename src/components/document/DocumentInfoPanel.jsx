@@ -1,11 +1,9 @@
 // 소유: JJW (문서 상세 - 문서 정보)
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../common/Button';
 import Card from '../common/Card';
-import Chip from '../common/Chip';
 import StatusBadge from '../common/StatusBadge';
-import TextField from '../common/TextField';
 import { getErrorMessage } from '../../utils/errors';
 
 const NAME_MAX = 200;
@@ -23,7 +21,6 @@ const DESCRIPTION_MAX = 500;
  * @param actions 제목 줄 오른쪽에 둘 버튼들 (페이지가 넣음)
  */
 export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
-  const descriptionId = useId();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -31,6 +28,14 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
   const [descriptionError, setDescriptionError] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // "등록자 홍길동 · 현재 v4" (Figma: 설명 아래 작은 글씨 한 줄)
+  const meta = [
+    doc.uploadedBy?.name ? `등록자 ${doc.uploadedBy.name}` : null,
+    doc.currentVersionNo > 0 ? `현재 v${doc.currentVersionNo}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   const startEdit = () => {
     setName(doc.name);
@@ -74,79 +79,71 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
     }
   };
 
-  const actionRow = (
-    <div className="flex flex-wrap items-center gap-2">
-      {actions}
-      {doc.owned ? (
-        <>
-          <Button variant="outline" size="sm" onClick={startEdit}>
-            정보 수정
-          </Button>
-          <Button variant="danger" size="sm" onClick={onDelete}>
-            문서 삭제
-          </Button>
-        </>
-      ) : null}
-    </div>
-  );
-
   if (editing) {
+    // Figma: 제목·설명이 그 자리에서 입력칸으로 바뀌고, 저장·취소 버튼은 오른쪽 위에 놓입니다
     return (
-      <Card title="문서 정보 수정">
+      <Card>
         <form onSubmit={save} noValidate className="flex flex-col gap-3">
-          <TextField
-            label="이름"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setNameError('');
-            }}
-            error={nameError}
-            maxLength={NAME_MAX}
-            disabled={saving}
-            autoFocus
-          />
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={descriptionId} className="text-label font-medium text-ink-2">
-              설명
-            </label>
-            <textarea
-              id={descriptionId}
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                setDescriptionError('');
-              }}
-              maxLength={DESCRIPTION_MAX}
-              rows={3}
-              disabled={saving}
-              aria-invalid={descriptionError ? 'true' : 'false'}
-              className={`w-full resize-y rounded-xl border bg-white px-3.5 py-3 text-body text-ink placeholder:text-placeholder disabled:bg-th ${
-                descriptionError ? 'border-danger' : 'border-line'
-              }`}
-            />
-            <p className="text-right text-caption text-muted">
-              {description.length} / {DESCRIPTION_MAX}
-            </p>
-            {descriptionError ? (
-              <p role="alert" className="text-caption text-danger">
-                {descriptionError}
-              </p>
-            ) : null}
+          <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+            <div className="min-w-0 flex-1 basis-60">
+              <input
+                aria-label="이름"
+                aria-invalid={Boolean(nameError)}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setNameError('');
+                }}
+                maxLength={NAME_MAX}
+                placeholder={`이름 (1~${NAME_MAX}자)`}
+                disabled={saving}
+                autoFocus
+                className={`w-full rounded-xl border bg-white px-3.5 py-2 text-display font-bold text-ink placeholder:text-placeholder disabled:bg-th ${
+                  nameError ? 'border-danger' : 'border-brand'
+                }`}
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button type="submit" size="sm" disabled={saving}>
+                {saving ? '저장 중…' : '저장'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditing(false)} disabled={saving}>
+                취소
+              </Button>
+            </div>
           </div>
+          {nameError ? (
+            <p role="alert" className="text-caption text-danger">
+              {nameError}
+            </p>
+          ) : null}
+          <textarea
+            aria-label="설명"
+            aria-invalid={Boolean(descriptionError)}
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              setDescriptionError('');
+            }}
+            maxLength={DESCRIPTION_MAX}
+            rows={1}
+            placeholder={`설명 (0~${DESCRIPTION_MAX}자)`}
+            disabled={saving}
+            className={`field-sizing-content max-h-40 min-h-11 w-full resize-none rounded-xl border bg-white px-3.5 py-2.5 text-body text-ink placeholder:text-placeholder disabled:bg-th ${
+              descriptionError ? 'border-danger' : 'border-brand'
+            }`}
+          />
+          {descriptionError ? (
+            <p role="alert" className="text-caption text-danger">
+              {descriptionError}
+            </p>
+          ) : null}
+          {meta ? <p className="text-caption text-muted">{meta}</p> : null}
           {error ? (
             <p role="alert" className="rounded-xl bg-danger-bg px-3 py-2.5 text-label text-danger">
               {error}
             </p>
           ) : null}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-              취소
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? '저장 중…' : '저장'}
-            </Button>
-          </div>
         </form>
       </Card>
     );
@@ -154,21 +151,32 @@ export default function DocumentInfoPanel({ doc, onSave, onDelete, actions }) {
 
   return (
     <Card>
-      <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-        <div className="min-w-0 flex-1">
-          {/* 문서 이름·설명은 사용자가 쓴 글이므로 텍스트로만 그립니다 (명세 9.1) */}
-          <h1 className="break-words text-heading font-bold text-ink">{doc.name}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-1 basis-60">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {/* 문서 이름·설명은 사용자가 쓴 글이므로 텍스트로만 그립니다 (명세 9.1) */}
+            <h1 className="min-w-0 break-words text-display font-bold text-ink">{doc.name}</h1>
             <StatusBadge status={doc.status} />
-            {doc.currentVersionNo > 0 ? <Chip tone="soft">현재 v{doc.currentVersionNo}</Chip> : null}
-            {doc.uploadedBy?.name ? <span className="text-caption text-muted">등록자 {doc.uploadedBy.name}</span> : null}
+            {doc.owned ? (
+              <Button variant="outline" size="sm" onClick={startEdit}>
+                정보 수정
+              </Button>
+            ) : null}
           </div>
         </div>
-        {actionRow}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {actions}
+          {doc.owned ? (
+            <Button variant="danger" onClick={onDelete}>
+              문서 삭제
+            </Button>
+          ) : null}
+        </div>
       </div>
       <p className={`whitespace-pre-wrap break-words text-body ${doc.description ? 'text-ink-2' : 'text-muted'}`}>
         {doc.description || '설명이 없습니다'}
       </p>
+      {meta ? <p className="text-caption text-muted">{meta}</p> : null}
     </Card>
   );
 }
