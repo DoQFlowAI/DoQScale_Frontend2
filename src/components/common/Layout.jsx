@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import ChatWidget from '../chat/ChatWidget';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
 import { useDocumentList } from '../../utils/useDocumentList';
@@ -13,6 +14,9 @@ export default function Layout() {
   const list = useDocumentList();
   const refreshDocuments = list.refresh;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const isMainPage = pathname === '/';
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -27,11 +31,26 @@ export default function Layout() {
     <div className="flex h-full min-h-0 flex-col">
       <Header menuOpen={sidebarOpen} onMenuClick={() => setSidebarOpen(true)} onInvitationAccepted={refreshDocuments} />
       <div className="flex min-h-0 flex-1">
-        <Sidebar list={list} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar
+          list={list}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          createOpen={createOpen}
+          onOpenCreate={() => setCreateOpen(true)}
+          onCloseCreate={() => setCreateOpen(false)}
+        />
         <main className="thin-scroll min-w-0 flex-1 overflow-y-auto">
-          <Outlet context={{ refreshDocuments }} />
+          <Outlet
+            context={{
+              refreshDocuments,
+              documents: list.documents,
+              loadingDocuments: list.loading,
+              openCreateModal: () => setCreateOpen(true),
+            }}
+          />
         </main>
       </div>
+      {!isMainPage && <ChatWidget />}
     </div>
   );
 }

@@ -6,12 +6,12 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ErrorMessage from '../components/common/ErrorMessage';
+import Icon from '../components/common/Icon';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Modal from '../components/common/Modal';
 import PageError from '../components/common/PageError';
 import VersionSelectModal from '../components/common/VersionSelectModal';
 import VersionUploadPanel from '../components/common/VersionUploadPanel';
-import ChatWidget from '../components/chat/ChatWidget';
 import DocumentInfoPanel from '../components/document/DocumentInfoPanel';
 import HistoryTimeline from '../components/document/HistoryTimeline';
 import PermissionPanel from '../components/document/PermissionPanel';
@@ -274,8 +274,18 @@ function DocumentDetail({ documentId }) {
         onDelete={() => setDeleteDocOpen(true)}
         actions={
           // Figma: 등록자는 [열람자 관리], 열람만 하는 사람은 [열람자 보기]
-          <Button variant="outline" onClick={() => setPermissionOpen(true)}>
-            {doc.owned ? '열람자 관리' : '열람자 보기'}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setPermissionOpen(true)}
+            aria-label={doc.owned ? '열람자 관리' : '열람자 보기'}
+            title={doc.owned ? '열람자 관리' : '열람자 보기'}
+            className="group shrink-0 !px-1 !py-1 hover:!bg-transparent"
+          >
+            <Icon
+              name="user"
+              className="h-5 w-5 text-muted transition-all duration-150 group-hover:scale-115 group-hover:text-ink-2"
+            />
           </Button>
         }
       />
@@ -419,9 +429,6 @@ function DocumentDetail({ documentId }) {
         onConfirm={removeDocument}
         onCancel={() => setDeleteDocOpen(false)}
       />
-
-      {/* 챗봇은 페이지 맨 끝에 한 번. 버전 본문 패널보다 뒤에 둬서 패널이 열려 있어도 아이콘이 위에 보입니다 */}
-      <ChatWidget />
     </div>
   );
 }

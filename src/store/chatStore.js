@@ -5,7 +5,12 @@ export const useChatStore = create((set) => ({
   sessionId: null,
   messages: [],
   isLoading: false,
+  widgetOpen: false,
+  pendingQuestion: null,
 
+  setWidgetOpen: (widgetOpen) => set({ widgetOpen }),
+  setPendingQuestion: (pendingQuestion) => set({ pendingQuestion }),
+  askQuestion: (question) => set({ widgetOpen: true, pendingQuestion: question }),
   setSession: (sessionId) => set({ sessionId }),
   setLoading: (isLoading) => set({ isLoading }),
   setMessages: (messages) => set({ messages }),
@@ -27,5 +32,5 @@ export const useChatStore = create((set) => ({
       messages: s.messages.map((m) => (m.id === id ? { ...m, ...patch, streaming: false } : m)),
       isLoading: false,
     })),
-  clear: () => set({ sessionId: null, messages: [], isLoading: false }),
+  clear: () => set({ sessionId: null, messages: [], isLoading: false, widgetOpen: false, pendingQuestion: null }),
 }));

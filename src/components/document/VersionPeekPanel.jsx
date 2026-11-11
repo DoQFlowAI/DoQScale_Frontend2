@@ -6,6 +6,7 @@ import Chip from '../common/Chip';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingSpinner from '../common/LoadingSpinner';
 import StatusBadge from '../common/StatusBadge';
+import MarkdownView from '../common/MarkdownView';
 import { versionService } from '../../services/versionService';
 import { ApiError, getErrorMessage, isNotFound } from '../../utils/errors';
 import { changeTypeLabel } from '../../utils/changeType';
@@ -96,7 +97,7 @@ export default function VersionPeekPanel({ documentId, versionNo, onClose, onCom
   else if (!ready) body = <p className="py-6 text-center text-sm text-muted">아직 본문을 볼 수 없습니다</p>;
   else if (data.content == null) body = <p className="py-6 text-center text-sm text-muted">본문을 불러올 수 없습니다</p>;
   else {
-    // 본문은 텍스트로만 그립니다 (명세 9.1). md·xml도 해석하지 않고 줄바꿈 그대로 보여 줍니다
+    // 원문보기 본문은 마크다운 스타일을 적용하여 렌더링합니다
     body = (
       <>
         {data.kind === 'DOC' || data.truncated ? (
@@ -105,7 +106,7 @@ export default function VersionPeekPanel({ documentId, versionNo, onClose, onCom
             {data.truncated ? <p className="text-caption text-muted">본문이 길어 앞부분만 보여 줍니다</p> : null}
           </div>
         ) : null}
-        <div className="whitespace-pre-wrap break-words text-body leading-7 text-ink-2">{data.content}</div>
+        <MarkdownView content={data.content} />
       </>
     );
   }

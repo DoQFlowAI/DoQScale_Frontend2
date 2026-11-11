@@ -61,9 +61,9 @@ export default function VersionTable({ versions, currentVersionNo, owned = false
       ) : shown.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">해당하는 버전이 없습니다</p>
       ) : (
-        <>
+        <div className="overflow-hidden rounded-xl border border-line bg-white">
           {/* 표 머리줄은 화면에서만 보이는 장식입니다 (각 줄의 버튼이 이미 전체 내용을 읽어 줌) */}
-          <div aria-hidden="true" className="hidden rounded-xl bg-th md:flex">
+          <div aria-hidden="true" className="hidden border-b border-line bg-th md:flex">
             <div className={`flex-1 px-3 py-2.5 text-caption text-muted ${COLUMNS}`}>
               <span>버전</span>
               <span>파일명</span>
@@ -72,14 +72,14 @@ export default function VersionTable({ versions, currentVersionNo, owned = false
             </div>
             {owned ? <span className="w-12 shrink-0" /> : null}
           </div>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col divide-y divide-line">
             {shown.map((v) => {
               const selected = v.versionNo === selectedVersionNo;
               const onlyOne = versions.length <= 1;
               return (
                 <li
                   key={v.versionNo}
-                  className={`flex items-center rounded-xl border ${selected ? 'border-soft-line bg-soft' : 'border-line bg-white'}`}
+                  className={`flex items-center transition-colors ${selected ? 'bg-soft' : 'hover:bg-th/50'}`}
                 >
                   {/* 줄 전체가 하나의 버튼이라 Enter·Space 로도 열립니다. 삭제 버튼은 형제 요소라 서로 이벤트가 섞이지 않습니다 */}
                   <button
@@ -88,7 +88,7 @@ export default function VersionTable({ versions, currentVersionNo, owned = false
                     aria-label={`v${v.versionNo} 본문 보기`}
                     aria-current={selected ? 'true' : undefined}
                     onClick={() => onSelect?.(v)}
-                    className={`flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 rounded-xl px-3 py-2 text-left md:flex-nowrap ${COLUMNS}`}
+                    className={`flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-2.5 text-left md:flex-nowrap ${COLUMNS}`}
                   >
                     <span className="flex items-center gap-2">
                       <span className="text-body font-bold text-ink">v{v.versionNo}</span>
@@ -116,7 +116,7 @@ export default function VersionTable({ versions, currentVersionNo, owned = false
               );
             })}
           </ul>
-        </>
+        </div>
       )}
 
       {children}

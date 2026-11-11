@@ -3,6 +3,8 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from './Button';
 import ConfirmDialog from './ConfirmDialog';
+import Modal from './Modal';
+import TextField from './TextField';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DocumentTabList from '../document/DocumentTabList';
 import DocumentCreateModal from '../document/DocumentCreateModal';
@@ -11,21 +13,85 @@ import { useAuthStore } from '../../store/authStore';
 import { LEADER_RANK } from '../../utils/format';
 import { getErrorMessage, isNotFound } from '../../utils/errors';
 
-export default function Sidebar({ list, open = false, onClose }) {
+const NAME_MAX = 200;
+const DESC_MAX = 500;
+
+export default function Sidebar({ list, open = false, onClose, createOpen: externalCreateOpen, onOpenCreate, onCloseCreate }) {
 
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const isLeader = user?.rankLevel === LEADER_RANK;
-  const [createOpen, setCreateOpen] = useState(false);
+  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
+  const createOpen = externalCreateOpen ?? internalCreateOpen;
+  const openCreate = onOpenCreate ?? (() => setInternalCreateOpen(true));
+  const closeCreate = onCloseCreate ?? (() => setInternalCreateOpen(false));
   const { pathname } = useLocation();
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [editTarget, setEditTarget] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editErrors, setEditErrors] = useState({});
+  const [editFormError, setEditFormError] = useState('');
+  const [editing, setEditing] = useState(false);
 
   const handleCreated = (documentId, flash) => {
-    setCreateOpen(false);
+    closeCreate();
     list.refresh();
     navigate(`/documents/${documentId}`, { state: { flash } });
+  };
+
+  const askEdit = (doc) => {
+    setEditTarget(doc);
+    setEditName(doc.name ?? '');
+    setEditDescription(doc.description ?? '');
+    setEditErrors({});
+    setEditFormError('');
+  };
+
+  const closeEdit = () => {
+    if (editing) return;
+    setEditTarget(null);
+    setEditErrors({});
+    setEditFormError('');
+  };
+
+  const confirmEdit = async (e) => {
+    e?.preventDefault();
+    if (!editTarget || editing) return;
+
+    const nextName = editName.trim();
+    const nextDescription = editDescription.trim();
+    const found = {};
+    if (nextName.length < 1 || nextName.length > NAME_MAX) {
+      found.name = `이름은 1~${NAME_MAX}자로 입력해 주세요`;
+    }
+    if (nextDescription.length > DESC_MAX) {
+      found.description = `설명은 ${DESC_MAX}자 이하로 입력해 주세요`;
+    }
+    setEditErrors(found);
+    setEditFormError('');
+    if (Object.keys(found).length > 0) return;
+
+    const patch = {};
+    if (nextName !== (editTarget.name ?? '').trim()) patch.name = nextName;
+    if (nextDescription !== (editTarget.description ?? '').trim()) patch.description = nextDescription;
+    if (Object.keys(patch).length === 0) {
+      setEditTarget(null);
+      return;
+    }
+
+    setEditing(true);
+    try {
+      await documentService.update(editTarget.documentId, patch);
+      setEditing(false);
+      setEditTarget(null);
+      list.refresh();
+    } catch (err) {
+      setEditFormError(getErrorMessage(err));
+      setEditing(false);
+    }
   };
 
   const askDelete = (doc) => {
@@ -85,16 +151,65 @@ export default function Sidebar({ list, open = false, onClose }) {
             onLoadMore={list.loadMore}
             onRetry={list.refresh}
             onNavigate={onClose}
+            onEdit={askEdit}
             onDelete={askDelete}
           />
         </nav>
         {isLeader ? (
-          <Button className="w-full" onClick={() => setCreateOpen(true)}>
+          <Button className="w-full" onClick={openCreate}>
             <span aria-hidden="true">+</span> 문서 만들기
           </Button>
         ) : null}
       </aside>
-      <DocumentCreateModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={handleCreated} />
+      <DocumentCreateModal open={createOpen} onClose={closeCreate} onCreated={handleCreated} />
+      <Modal
+        open={editTarget !== null}
+        title="문서 정보 수정"
+        onClose={closeEdit}
+        closeDisabled={editing}
+        width="max-w-[480px]"
+        footer={
+          <>
+            <Button variant="outline" onClick={closeEdit} disabled={editing}>
+              취소
+            </Button>
+            <Button type="submit" form="doc-edit-form" disabled={editing}>
+              {editing ? '저장 중…' : '저장'}
+            </Button>
+          </>
+        }
+      >
+        <form id="doc-edit-form" onSubmit={confirmEdit} noValidate className="flex flex-col gap-4 pb-2">
+          <TextField
+            label={`이름 (1~${NAME_MAX}자)`}
+            value={editName}
+            onChange={(e) => {
+              setEditName(e.target.value);
+              if (editErrors.name) setEditErrors((prev) => ({ ...prev, name: undefined }));
+            }}
+            error={editErrors.name}
+            maxLength={NAME_MAX}
+            disabled={editing}
+            autoFocus
+          />
+          <TextField
+            label={`설명 (0~${DESC_MAX}자)`}
+            value={editDescription}
+            onChange={(e) => {
+              setEditDescription(e.target.value);
+              if (editErrors.description) setEditErrors((prev) => ({ ...prev, description: undefined }));
+            }}
+            error={editErrors.description}
+            maxLength={DESC_MAX}
+            disabled={editing}
+          />
+          {editFormError ? (
+            <p role="alert" className="rounded-btn-sm bg-danger-bg px-3 py-2.5 text-label text-danger">
+              {editFormError}
+            </p>
+          ) : null}
+        </form>
+      </Modal>
       <ConfirmDialog
         open={deleteTarget !== null}
         message={
@@ -124,4 +239,7 @@ Sidebar.propTypes = {
   }).isRequired,
   open: PropTypes.bool,
   onClose: PropTypes.func,
+  createOpen: PropTypes.bool,
+  onOpenCreate: PropTypes.func,
+  onCloseCreate: PropTypes.func,
 };

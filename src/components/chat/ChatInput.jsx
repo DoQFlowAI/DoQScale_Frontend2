@@ -5,7 +5,7 @@ import Button from '../common/Button';
 
 const MAX_INPUT_LENGTH = 1000;
 
-export default function ChatInput({ onSend, disabled = false, showCount = true }) {
+export default function ChatInput({ onSend, disabled = false, showCount = true, placeholder = '질문을 입력하세요' }) {
     const [question, setQuestion] = useState('');
     const trimmed = question.trim();
     const canSend = !disabled && trimmed.length > 0;
@@ -44,13 +44,13 @@ export default function ChatInput({ onSend, disabled = false, showCount = true }
                     rows={1}
                     disabled={disabled}
                     aria-label="질문"
-                    placeholder="질문을 입력하세요"
+                    placeholder={placeholder}
                     className="field-sizing-content max-h-32 min-h-11 min-w-0 flex-1 md:min-h-6 resize-none bg-transparent py-1 text-body leading-6 text-ink outline-none placeholder:text-placeholder"
                 />
                 {showCount ? (
                     <span className="shrink-0 text-caption text-muted">{question.length} / {MAX_INPUT_LENGTH}</span>
                 ) : null}
-                <Button type="submit" size="sm" disabled={!canSend}>보내기</Button>
+                <Button type="submit" size="sm" disabled={!canSend}>전송</Button>
             </div>
         </form>
     );
@@ -60,4 +60,5 @@ ChatInput.propTypes = {
     onSend: PropTypes.func.isRequired,
     disabled: PropTypes.bool,
     showCount: PropTypes.bool,
+    placeholder: PropTypes.string,
 };
