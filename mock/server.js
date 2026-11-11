@@ -102,7 +102,7 @@ function issueTokens(user) {
   return { accessToken, refreshToken };
 }
 
-const REFRESH_COOKIE = 'refresh_token';
+const REFRESH_COOKIE = 'doq_refresh';
 const refreshCookie = (value, maxAge) =>
   `${REFRESH_COOKIE}=${value}; HttpOnly; Secure; SameSite=Strict; Path=/api/auth; Max-Age=${maxAge}`;
 const readRefreshCookie = (req) =>
