@@ -1,6 +1,8 @@
 // 소유: WJH
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import chatbotIdle from '../../assets/chatbot-no-bubble.png';
+import chatbotTyping from '../../assets/chatbot-typing-0-1-2-3.gif';
 
 export default function ChatMessage({ role, content, sources = [], masked = false, streaming = false }) {
     const isUser = role === 'user';
@@ -15,9 +17,16 @@ export default function ChatMessage({ role, content, sources = [], masked = fals
     const isNotice = masked || (streaming && !content);
 
     return (
-        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+            {!isUser && (
+                <img
+                    src={streaming ? chatbotTyping : chatbotIdle}
+                    alt={streaming ? '챗봇 답변 중' : '챗봇'}
+                    className="h-22 w-22 shrink-0 object-contain"
+                />
+            )}
             <div
-                className={`max-w-[85%] rounded-btn px-4 py-3 text-body whitespace-pre-wrap break-words ${isUser ? 'bg-brand text-white' : 'border border-line bg-white text-ink'
+                className={`max-w-[85%] rounded-btn px-4 py-3 text-body whitespace-pre-wrap break-words ${isUser ? 'bg-brand text-white' : 'mb-5 border border-line bg-white text-ink'
                     }`}
             >
                 <p className={isNotice ? 'text-muted' : ''}>{body}</p>
