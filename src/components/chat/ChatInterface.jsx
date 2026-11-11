@@ -11,6 +11,8 @@ import ChatInput from './ChatInput';
 let nextLocalId = 1;
 const newLocalId = () => `local-${nextLocalId++}`;
 const RATE_LIMIT_WAIT_MS = 10000;
+const EXAMPLE_WAIT_MS = 800;
+const EXAMPLE_TOKEN_MS = 45;
 
 function toMessage(m) {
     return {
@@ -53,6 +55,7 @@ export default function ChatInterface({
     const [rateLimited, setRateLimited] = useState(false);
     const [draft, setDraft] = useState('');
     const listRef = useRef(null);
+    const exampleTimer = useRef(null);
 
     useEffect(() => {
         const state = useChatStore.getState();
@@ -77,6 +80,7 @@ export default function ChatInterface({
 
     useEffect(() => {
         return () => {
+            clearTimeout(exampleTimer.current);
             const { messages } = useChatStore.getState();
             messages.filter((m) => m.streaming).forEach((m) => endAnswer(m.id));
         };
@@ -104,13 +108,33 @@ export default function ChatInterface({
         }
     }
 
-    const handleSend = useCallback(async (question) => {
+    const handleSend = useCallback(async (question, exampleAnswer) => {
         setError('');
         addMessage({ id: newLocalId(), role: 'user', content: question });
 
         const answerId = newLocalId();
         addMessage({ id: answerId, role: 'assistant', content: '', streaming: true });
         setLoading(true);
+
+        if (exampleAnswer) {
+            const tokens = exampleAnswer.match(/\S+\s*/g);
+            let index = 0;
+
+            const showNextToken = () => {
+                if (!useChatStore.getState().messages.some((message) => message.id === answerId)) return;
+
+                appendToken(answerId, tokens[index]);
+                index += 1;
+                if (index === tokens.length) {
+                    finishMessage(answerId);
+                } else {
+                    exampleTimer.current = setTimeout(showNextToken, EXAMPLE_TOKEN_MS);
+                }
+            };
+
+            exampleTimer.current = setTimeout(showNextToken, EXAMPLE_WAIT_MS);
+            return;
+        }
 
         let id = sessionId;
         if (!id) {
@@ -145,9 +169,12 @@ export default function ChatInterface({
 
     useEffect(() => {
         if (!active || !pendingQuestion || isLoading) return;
-        const q = pendingQuestion;
         useChatStore.getState().setPendingQuestion(null);
-        handleSend(q);
+        if (typeof pendingQuestion === 'string') {
+            handleSend(pendingQuestion);
+        } else {
+            handleSend(pendingQuestion.question, pendingQuestion.exampleAnswer);
+        }
     }, [active, pendingQuestion, isLoading, handleSend]);
 
     return (

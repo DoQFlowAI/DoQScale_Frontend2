@@ -10,12 +10,24 @@ import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import { LEADER_RANK } from '../utils/format';
 
-const EXAMPLE_QUESTIONS_TOP = [
-  '출장비 정산 지침 핵심 내용 요약해줘',
-  '인사 규정 최신 버전에서 바뀐 부분 알려줘',
-  '연차는 며칠 전에 신청해야 해?',
+const EXAMPLE_QUESTIONS = [
+  {
+    question: '출장비 정산 지침 핵심 내용 요약해줘',
+    exampleAnswer: '출장비를 정산하려면 교통비와 숙박비 등 출장에 사용한 비용을 항목별로 정리하세요. 출장 목적과 일정을 적고 영수증을 첨부해 승인 담당자에게 제출하면 됩니다. 비용 한도와 제출 기한은 회사의 최신 출장비 정산 지침을 확인하세요.',
+  },
+  {
+    question: '인사 규정 최신 버전에서 바뀐 부분 알려줘',
+    exampleAnswer: '이 예시에서는 휴가 신청 절차와 재택근무 승인 기준이 바뀌었어요. 휴가 신청은 전자결재로 접수하고, 재택근무는 팀장에게 사전에 승인을 받도록 절차를 구체화했습니다. 실제 변경 사항과 시행일은 문서의 버전 비교에서 확인할 수 있어요.',
+  },
+  {
+    question: '연차는 며칠 전에 신청해야 해?',
+    exampleAnswer: '예시 규정에서는 연차 사용일 기준 3영업일 전까지 신청하도록 안내합니다. 갑자기 연차가 필요한 경우에는 팀장에게 먼저 알리고 신청서를 제출하는 방식이에요. 실제 신청 기한은 회사의 최신 인사 규정을 확인하세요.',
+  },
+  {
+    question: '외부 반출이 금지된 자료는 뭐야?',
+    exampleAnswer: '고객 개인정보, 미공개 재무 자료, 사내 소스 코드와 비밀로 분류된 문서가 대표적인 예시입니다. 외부 공유가 필요하면 먼저 자료의 보안 등급을 확인하고 담당자에게 승인 절차를 문의하세요.',
+  },
 ];
-const EXAMPLE_QUESTION_BOTTOM = '외부 반출이 금지된 자료는 뭐야?';
 
 export default function DashboardPage() {
   const { documents = [], loadingDocuments = false, documentsLoading = false, openCreateModal } = useOutletContext() ?? {};
@@ -29,10 +41,6 @@ export default function DashboardPage() {
   const isLeader = user?.rankLevel === LEADER_RANK;
   const hasMessages = messages.length > 0;
   const hasDocs = documents.length > 0;
-
-  const handleExampleClick = (question) => {
-    useChatStore.getState().setPendingQuestion(question);
-  };
 
   const handleAskChanges = (doc) => {
     useChatStore.getState().setPendingQuestion(`${doc.name} 최신 버전에서 변경된 내용을 알려줘`);
@@ -177,30 +185,21 @@ export default function DashboardPage() {
     <div className="flex min-h-0 flex-1 flex-col items-center justify-start py-6">
       <div className="text-center">
         <h1 className="text-display font-bold text-ink">무엇이 궁금하세요?</h1>
-        <p className="mt-2 text-caption text-muted">아래 예시를 누르면 입력창에 바로 들어가요</p>
+        <p className="mt-2 text-caption text-muted">아래 질문을 누르면 예시 답변을 볼 수 있어요</p>
       </div>
 
       <div className="mt-8 mb-10 flex w-full max-w-3xl flex-col items-center gap-3">
         <div className="flex flex-wrap justify-center gap-2.5">
-          {EXAMPLE_QUESTIONS_TOP.map((q) => (
+          {EXAMPLE_QUESTIONS.map((example) => (
             <button
-              key={q}
+              key={example.question}
               type="button"
-              onClick={() => handleExampleClick(q)}
+              onClick={() => useChatStore.getState().setPendingQuestion(example)}
               className="rounded-full border border-line bg-white px-4 py-2 text-label text-ink-2 shadow-sm transition hover:border-brand hover:text-brand"
             >
-              {q}
+              {example.question}
             </button>
           ))}
-        </div>
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={() => handleExampleClick(EXAMPLE_QUESTION_BOTTOM)}
-            className="rounded-full border border-line bg-white px-4 py-2 text-label text-ink-2 shadow-sm transition hover:border-brand hover:text-brand"
-          >
-            {EXAMPLE_QUESTION_BOTTOM}
-          </button>
         </div>
       </div>
 

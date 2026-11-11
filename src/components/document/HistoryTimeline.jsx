@@ -98,7 +98,10 @@ export default function HistoryTimeline({ documentId, versions, segments }) {
               </div>
             </div>
             {next ? (
-              <div className="relative ml-[17px] border-l-2 border-line-soft py-2.5 pl-6">
+              <div className="relative ml-[17px] py-2.5 pl-[26px]">
+                <span aria-hidden="true" className="pointer-events-none absolute top-0 bottom-[2px] left-0 w-0.5 bg-line-soft">
+                  <span className="absolute bottom-0 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-line-soft" />
+                </span>
                 {segment ? (
                   <SegmentCard
                     documentId={documentId}
@@ -106,10 +109,6 @@ export default function HistoryTimeline({ documentId, versions, segments }) {
                     comparable={canCompare(v) && canCompare(next)}
                   />
                 ) : null}
-                <span
-                  aria-hidden="true"
-                  className="absolute -bottom-px -left-[5px] h-2 w-2 rotate-45 border-b-2 border-r-2 border-line-soft"
-                />
               </div>
             ) : null}
           </li>
