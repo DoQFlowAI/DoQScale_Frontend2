@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: upload-data
+  namespace: doqflow
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: doqflow
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: backend
+          image: ghcr.io/doqflowai/doqflow-backend:57614c69883967f3afb7199df2eef370c44da272
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_URL
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: DB_URL } }
+            - name: DB_USER
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: DB_APP_USER } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_APP_PASSWORD } }
+            - name: FLYWAY_USER
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: DB_MIGRATE_USER } }
+            - name: FLYWAY_PASSWORD
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_MIGRATE_PASSWORD } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: JWT_SECRET } }
+            - name: AI_BASE_URL
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: AI_BASE_URL } }
+            - name: AI_INTERNAL_KEY
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: AI_INTERNAL_KEY } }
+            - name: UPLOAD_DIR
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: UPLOAD_DIR } }
+            - name: CORS_ORIGINS
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: CORS_ORIGINS } }
+            - name: SIGNUP_KEY_LEAD
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: SIGNUP_KEY_LEAD } }
+            - name: ACTUATOR_EXPOSURE
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: ACTUATOR_EXPOSURE } }
+            - name: REFRESH_COOKIE_SECURE
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: REFRESH_COOKIE_SECURE } }
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: upload-data
+              mountPath: /app/uploads
+          startupProbe:
+            httpGet: { path: /api/actuator/health, port: 8080 }
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet: { path: /api/actuator/health, port: 8080 }
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: 8080 }
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { memory: 1536Mi }
+      volumes:
+        - name: upload-data
+          persistentVolumeClaim:
+            claimName: upload-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: doqflow
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - port: 8080
+      targetPort: 8080

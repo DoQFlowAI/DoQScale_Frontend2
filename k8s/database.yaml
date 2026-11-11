@@ -36,43 +36,19 @@ spec:
             - containerPort: 3306
           env:
             - name: MARIADB_ROOT_HOST
-              valueFrom:
-                {
-                  configMapKeyRef:
-                    { name: doqflow-config, key: MARIADB_ROOT_HOST },
-                }
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: MARIADB_ROOT_HOST } }
             - name: MARIADB_DATABASE
-              valueFrom:
-                {
-                  configMapKeyRef:
-                    { name: doqflow-config, key: MARIADB_DATABASE },
-                }
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: MARIADB_DATABASE } }
             - name: MARIADB_ROOT_PASSWORD
-              valueFrom:
-                {
-                  secretKeyRef:
-                    { name: doqflow-secrets, key: DB_ROOT_PASSWORD },
-                }
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_ROOT_PASSWORD } }
             - name: DB_APP_USER
-              valueFrom:
-                { configMapKeyRef: { name: doqflow-config, key: DB_APP_USER } }
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: DB_APP_USER } }
             - name: DB_APP_PASSWORD
-              valueFrom:
-                {
-                  secretKeyRef: { name: doqflow-secrets, key: DB_APP_PASSWORD },
-                }
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_APP_PASSWORD } }
             - name: DB_MIGRATE_USER
-              valueFrom:
-                {
-                  configMapKeyRef:
-                    { name: doqflow-config, key: DB_MIGRATE_USER },
-                }
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: DB_MIGRATE_USER } }
             - name: DB_MIGRATE_PASSWORD
-              valueFrom:
-                {
-                  secretKeyRef:
-                    { name: doqflow-secrets, key: DB_MIGRATE_PASSWORD },
-                }
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_MIGRATE_PASSWORD } }
           volumeMounts:
             - name: db-data
               mountPath: /var/lib/mysql
