@@ -37,7 +37,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: backend
-          image: ghcr.io/doqflowai/doqflow-backend:3117bb1cb04460c1371519b1671f2d4268035fe8
+          image: ghcr.io/doqflowai/doqflow-backend:d4d4132a705c2916b98e413d7734d779962e0875
           ports:
             - containerPort: 8080
           env:

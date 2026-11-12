@@ -37,7 +37,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: ai-module
-          image: ghcr.io/doqflowai/doqflow-ai:49779818044d3940e37f86da48918db683ee531a
+          image: ghcr.io/doqflowai/doqflow-ai:ab4530e08864a5eb6ccece59968808d1d298178b
           ports:
             - containerPort: 8000
           env:
