@@ -5,7 +5,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:1.30-alpine
+FROM nginxinc/nginx-unprivileged:1.30-alpine
 COPY nginx/ /etc/nginx/templates/
 
 ENV BACKEND_URL=http://backend:8080
@@ -14,4 +14,4 @@ ENV NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates/http
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-EXPOSE 80 443
+EXPOSE 8080 8443

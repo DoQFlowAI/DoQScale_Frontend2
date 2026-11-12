@@ -1,13 +1,13 @@
 server_tokens off;
 
 server {
-    listen 80;
+    listen 8080;
     server_name _;
     return 301 https://${SERVER_NAME}$request_uri;
 }
 
 server {
-    listen 443 ssl;
+    listen 8443 ssl;
     http2 on;
     server_name ${SERVER_NAME};
     client_max_body_size 220M;
