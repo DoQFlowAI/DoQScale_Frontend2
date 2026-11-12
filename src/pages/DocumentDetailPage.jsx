@@ -59,7 +59,7 @@ function DocumentDetail({ documentId }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { refreshDocuments } = useOutletContext();
+  const { refreshDocuments, documents } = useOutletContext();
 
   const [doc, setDoc] = useState(null);
   const [history, setHistory] = useState(null);
@@ -122,6 +122,16 @@ function DocumentDetail({ documentId }) {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  // 사이드바에서 이름·설명을 고치면 목록만 다시 받아지므로, 목록의 최신 값을 상세에도 반영합니다 (새로고침 불필요)
+  const listed = documents?.find((d) => String(d.documentId) === String(documentId));
+  useEffect(() => {
+    if (!listed) return;
+    setDoc((prev) => {
+      if (!prev || (prev.name === listed.name && (prev.description ?? '') === (listed.description ?? ''))) return prev;
+      return { ...prev, name: listed.name, description: listed.description };
+    });
+  }, [listed]);
 
   // 문서나 버전 중 PROCESSING 이 있으면 3초마다 다시 조회하고 사이드바 상태 배지도 같이 갱신합니다. 끝나면 멈춥니다
   const processing = Boolean(doc && (doc.status === 'PROCESSING' || doc.versions.some((v) => v.status === 'PROCESSING')));
