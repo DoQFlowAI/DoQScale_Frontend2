@@ -13,6 +13,7 @@ src/preview/LocalPreview.jsx
 
 mock
 deploy
+k8s
 
 .claude
 .vscode

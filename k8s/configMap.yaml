@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: doqflow-config
+  namespace: doqflow
+data:
+  # database
+  MARIADB_DATABASE: "doqflow"
+  MARIADB_ROOT_HOST: "localhost"
+  DB_APP_USER: "doqflow_app"
+  DB_MIGRATE_USER: "doqflow_migrate"
+  # backend
+  DB_URL: "jdbc:mariadb://database:3306/doqflow"
+  AI_BASE_URL: "http://ai-module:8000"
+  UPLOAD_DIR: "/app/uploads"
+  CORS_ORIGINS: "http://34.64.162.43"
+  ACTUATOR_EXPOSURE: "health,info"
+  REFRESH_COOKIE_SECURE: "false"
+  # ai-module
+  EMBEDDING_MODEL: "text-embedding-3-small"
+  # frontend
+  BACKEND_URL: "http://backend.doqflow.svc.cluster.local:8080"
+  NGINX_ENVSUBST_TEMPLATE_DIR: "/etc/nginx/templates/http"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init
+  namespace: doqflow
+data:
+  01-users.sh: |
+    mariadb --protocol=socket -uroot -p"$MARIADB_ROOT_PASSWORD" <<SQL
+    CREATE USER IF NOT EXISTS '${DB_APP_USER}'@'%' IDENTIFIED BY '${DB_APP_PASSWORD}';
+    GRANT SELECT, INSERT, UPDATE, DELETE ON doqflow.* TO '${DB_APP_USER}'@'%';
+    CREATE USER IF NOT EXISTS '${DB_MIGRATE_USER}'@'%' IDENTIFIED BY '${DB_MIGRATE_PASSWORD}';
+    GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, INDEX, REFERENCES ON doqflow.* TO '${DB_MIGRATE_USER}'@'%';
+    SQL

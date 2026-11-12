@@ -20,3 +20,6 @@ Thumbs.db
 tags.env
 backup*.sql
 deploy/certs/
+
+k8s/*secret*.yaml
+

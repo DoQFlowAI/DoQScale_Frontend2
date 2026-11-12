@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-data
+  namespace: doqflow
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+  namespace: doqflow
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: database
+          image: mariadb:10.11
+          args:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_HOST
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: MARIADB_ROOT_HOST } }
+            - name: MARIADB_DATABASE
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: MARIADB_DATABASE } }
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_ROOT_PASSWORD } }
+            - name: DB_APP_USER
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: DB_APP_USER } }
+            - name: DB_APP_PASSWORD
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_APP_PASSWORD } }
+            - name: DB_MIGRATE_USER
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: DB_MIGRATE_USER } }
+            - name: DB_MIGRATE_PASSWORD
+              valueFrom: { secretKeyRef: { name: doqflow-secrets, key: DB_MIGRATE_PASSWORD } }
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/mysql
+              subPath: data
+            - name: db-init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              command: ["healthcheck.sh", "--connect", "--innodb_initialized"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["healthcheck.sh", "--connect", "--innodb_initialized"]
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: db-data
+        - name: db-init
+          configMap:
+            name: db-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database
+  namespace: doqflow
+spec:
+  type: ClusterIP
+  selector:
+    app: database
+  ports:
+    - port: 3306
+      targetPort: 3306

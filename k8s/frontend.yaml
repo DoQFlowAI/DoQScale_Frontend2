@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: doqflow
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: frontend
+          image: ghcr.io/doqflowai/doqflow-frontend:fd862863d43d1a818e65f9a4ec347656a0c28926
+          ports:
+            - containerPort: 80
+          env:
+            - name: BACKEND_URL
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: BACKEND_URL } }
+            - name: NGINX_ENVSUBST_TEMPLATE_DIR
+              valueFrom: { configMapKeyRef: { name: doqflow-config, key: NGINX_ENVSUBST_TEMPLATE_DIR } }
+          securityContext:
+            allowPrivilegeEscalation: false
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /, port: 80 }
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 50m, memory: 32Mi }
+            limits: { memory: 128Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: doqflow
+spec:
+  type: LoadBalancer
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
