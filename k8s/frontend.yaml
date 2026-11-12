@@ -25,21 +25,22 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: frontend
-          image: ghcr.io/doqflowai/doqflow-frontend:fd862863d43d1a818e65f9a4ec347656a0c28926
+          image: ghcr.io/doqflowai/doqflow-frontend:359ec2bda3d1cdc2244d1b4a3a994014f517f7d3
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           env:
             - name: BACKEND_URL
               valueFrom: { configMapKeyRef: { name: doqflow-config, key: BACKEND_URL } }
             - name: NGINX_ENVSUBST_TEMPLATE_DIR
               valueFrom: { configMapKeyRef: { name: doqflow-config, key: NGINX_ENVSUBST_TEMPLATE_DIR } }
           securityContext:
+            runAsNonRoot: true
             allowPrivilegeEscalation: false
           readinessProbe:
-            httpGet: { path: /, port: 80 }
+            httpGet: { path: /, port: 8080 }
             periodSeconds: 10
           livenessProbe:
-            httpGet: { path: /, port: 80 }
+            httpGet: { path: /, port: 8080 }
             periodSeconds: 20
             failureThreshold: 3
           resources:
@@ -57,4 +58,4 @@ spec:
     app: frontend
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
