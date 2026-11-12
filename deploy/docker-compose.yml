@@ -83,8 +83,8 @@ services:
     volumes:
       - ${CERT_DIR:-./certs}:/etc/letsencrypt:ro
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:8080"
+      - "443:8443"
     restart: unless-stopped
     logging: *logging
 
