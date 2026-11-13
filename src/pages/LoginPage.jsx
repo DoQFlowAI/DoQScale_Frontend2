@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import TextField from '../components/common/TextField';
 import Button from '../components/common/Button';
+import WalkingDogs from '../components/common/WalkingDogs';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
 import { useAuthStore } from '../store/authStore';
@@ -61,7 +62,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-page px-4 py-10">
+    <div className="flex min-h-full flex-col items-center justify-center bg-page px-4 py-10">
       <form
         onSubmit={submit}
         noValidate
@@ -115,6 +116,7 @@ export default function LoginPage() {
           </Link>
         </p>
       </form>
+      <WalkingDogs />
     </div>
   );
 }
