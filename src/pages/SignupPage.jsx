@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TextField from '../components/common/TextField';
 import Button from '../components/common/Button';
+import SnowEffect from '../components/common/SnowEffect';
+import WalkingDogs from '../components/common/WalkingDogs';
 import { authService } from '../services/authService';
 import { ApiError, getErrorMessage } from '../utils/errors';
 import { LEADER_RANK } from '../utils/format';
@@ -106,11 +108,12 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-page px-4 py-10">
+    <div className="flex min-h-full flex-col items-center justify-center bg-page px-4 py-10">
+      <SnowEffect />
       <form
         onSubmit={submit}
         noValidate
-        className="flex w-full max-w-[460px] flex-col gap-4 rounded-panel bg-white p-7 shadow-modal sm:p-9"
+        className="relative z-10 flex w-full max-w-[460px] flex-col gap-4 rounded-panel bg-white p-7 shadow-modal sm:p-9"
       >
         <h1 className="text-display font-bold text-brand">DoQFlow AI</h1>
         <h2 className="text-title font-bold text-ink">회원가입</h2>
@@ -198,6 +201,7 @@ export default function SignupPage() {
           </Link>
         </p>
       </form>
+      <WalkingDogs />
     </div>
   );
 }
